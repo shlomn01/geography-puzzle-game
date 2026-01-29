@@ -274,13 +274,10 @@ function generateSounds() {
         playPizzicato(440, 0.1);
     };
 
-    // Complete sound - triumphant violin fanfare
+    // Complete sound - Super Mario style coin collect
     sounds.complete = () => {
         if (!GameState.soundEnabled || !audioContext) return;
-        const notes = [523.25, 659.25, 783.99, 1046.5];
-        notes.forEach((note, i) => {
-            setTimeout(() => playViolinNote(note, 0.4, 0.35), i * 200);
-        });
+        playCoinSound();
     };
 
     sounds.bgMusic = null;
@@ -358,6 +355,42 @@ function playViolinNote(frequency, duration, volume) {
     osc2.stop(now + duration + 0.1);
     osc3.stop(now + duration + 0.1);
     vibrato.stop(now + duration + 0.1);
+}
+
+// Super Mario style coin sound
+function playCoinSound() {
+    if (!audioContext) return;
+
+    const now = audioContext.currentTime;
+
+    // First note (B5 - 987.77 Hz)
+    const osc1 = audioContext.createOscillator();
+    osc1.type = 'square';
+    osc1.frequency.setValueAtTime(987.77, now);
+
+    const gain1 = audioContext.createGain();
+    gain1.gain.setValueAtTime(0.3, now);
+    gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+
+    osc1.connect(gain1);
+    gain1.connect(audioContext.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.1);
+
+    // Second note (E6 - 1318.51 Hz) - the classic Mario coin "ding"
+    const osc2 = audioContext.createOscillator();
+    osc2.type = 'square';
+    osc2.frequency.setValueAtTime(1318.51, now + 0.1);
+
+    const gain2 = audioContext.createGain();
+    gain2.gain.setValueAtTime(0, now);
+    gain2.gain.setValueAtTime(0.3, now + 0.1);
+    gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+    osc2.connect(gain2);
+    gain2.connect(audioContext.destination);
+    osc2.start(now + 0.1);
+    osc2.stop(now + 0.5);
 }
 
 // Pizzicato (plucked string) sound
@@ -1500,22 +1533,76 @@ function createConfetti() {
     const container = document.getElementById('confetti');
     container.innerHTML = '';
 
-    const colors = ['#f0ad4e', '#5cb85c', '#4a90d9', '#d9534f', '#9b59b6'];
+    // Create fireworks effect
+    createFireworks(container);
+}
 
-    for (let i = 0; i < 50; i++) {
-        const confetti = document.createElement('div');
-        confetti.className = 'confetti';
-        confetti.style.left = Math.random() * 100 + '%';
-        confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
-        confetti.style.animationDelay = Math.random() * 2 + 's';
-        confetti.style.animationDuration = (2 + Math.random() * 2) + 's';
-        container.appendChild(confetti);
+function createFireworks(container) {
+    const colors = ['#ff0000', '#ffd700', '#00ff00', '#00bfff', '#ff00ff', '#ff6600', '#ffffff'];
+
+    // Create multiple firework bursts
+    for (let burst = 0; burst < 6; burst++) {
+        setTimeout(() => {
+            const centerX = 20 + Math.random() * 60; // Random X position (20-80%)
+            const centerY = 20 + Math.random() * 40; // Random Y position (20-60%)
+
+            // Create particles for each burst
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'firework-particle';
+
+                const angle = (i / 30) * Math.PI * 2;
+                const velocity = 50 + Math.random() * 100;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+
+                particle.style.cssText = `
+                    position: absolute;
+                    left: ${centerX}%;
+                    top: ${centerY}%;
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 50%;
+                    background: ${color};
+                    box-shadow: 0 0 10px ${color}, 0 0 20px ${color}, 0 0 30px ${color};
+                    pointer-events: none;
+                    animation: fireworkExplode 1.5s ease-out forwards;
+                    --dx: ${Math.cos(angle) * velocity}px;
+                    --dy: ${Math.sin(angle) * velocity}px;
+                `;
+
+                container.appendChild(particle);
+            }
+
+            // Play coin sound for each burst
+            if (burst < 3) {
+                playCoinSound();
+            }
+        }, burst * 400);
     }
 
-    // Clear confetti after animation
+    // Add firework animation if not exists
+    if (!document.getElementById('fireworkAnimation')) {
+        const style = document.createElement('style');
+        style.id = 'fireworkAnimation';
+        style.textContent = `
+            @keyframes fireworkExplode {
+                0% {
+                    transform: translate(0, 0) scale(1);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translate(var(--dx), var(--dy)) scale(0);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Clear after animation
     setTimeout(() => {
         container.innerHTML = '';
-    }, 5000);
+    }, 4000);
 }
 
 // ============================================
