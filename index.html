@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>משחק פאזל גיאוגרפי</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Audio Elements -->
+    <audio id="bgMusic" loop></audio>
+    <audio id="successSound"></audio>
+    <audio id="failSound"></audio>
+    <audio id="snapSound"></audio>
+    <audio id="completeSound"></audio>
+
+    <!-- Main Menu Screen -->
+    <div id="mainMenu" class="screen active">
+        <div class="menu-container">
+            <div class="game-logo">
+                <div class="globe-icon">🌍</div>
+                <h1>פאזל גיאוגרפי</h1>
+                <p class="subtitle">גלה את העולם דרך משחק!</p>
+            </div>
+
+            <div class="menu-buttons">
+                <button class="btn btn-primary btn-large" onclick="startGame()">
+                    <span class="btn-icon">🎮</span>
+                    התחל משחק
+                </button>
+                <button class="btn btn-secondary" onclick="showInstructions()">
+                    <span class="btn-icon">📖</span>
+                    הוראות
+                </button>
+                <button class="btn btn-secondary" onclick="toggleSound()">
+                    <span class="btn-icon" id="soundIcon">🔊</span>
+                    <span id="soundText">כבה צלילים</span>
+                </button>
+            </div>
+
+            <div class="high-score-display">
+                <span class="trophy">🏆</span>
+                <span>שיא: <span id="highScoreDisplay">0</span> נקודות</span>
+            </div>
+        </div>
+        <div class="floating-shapes">
+            <div class="shape shape1">🌎</div>
+            <div class="shape shape2">🌏</div>
+            <div class="shape shape3">🧩</div>
+            <div class="shape shape4">🗺️</div>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructionsModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="hideInstructions()">&times;</button>
+            <h2>📖 הוראות המשחק</h2>
+            <div class="instructions-content">
+                <div class="instruction-item">
+                    <span class="step-number">1</span>
+                    <div>
+                        <h3>שלב הפאזל 🧩</h3>
+                        <p>גרור את חלקי הפאזל למקומם הנכון. כשחתיכה קרובה למקומה או לחתיכה אחרת, היא תימשך אוטומטית!</p>
+                    </div>
+                </div>
+                <div class="instruction-item">
+                    <span class="step-number">2</span>
+                    <div>
+                        <h3>זיהוי יבשות 🌍</h3>
+                        <p>יבשת תהבהב על המפה - זהה אותה מתוך 3 אפשרויות.</p>
+                    </div>
+                </div>
+                <div class="instruction-item">
+                    <span class="step-number">3</span>
+                    <div>
+                        <h3>זיהוי מדינות 🏳️</h3>
+                        <p>מדינה תהבהב - זהה אותה מתוך האפשרויות.</p>
+                    </div>
+                </div>
+                <div class="instruction-item">
+                    <span class="step-number">4</span>
+                    <div>
+                        <h3>זיהוי ערים 🏙️</h3>
+                        <p>נקודה תהבהב על המפה - זהה את העיר.</p>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="hideInstructions()">הבנתי!</button>
+        </div>
+    </div>
+
+    <!-- Difficulty Selection Screen -->
+    <div id="difficultyScreen" class="screen">
+        <div class="screen-container">
+            <h2>בחר רמת קושי</h2>
+            <p class="screen-subtitle">כמה חלקים תרצה בפאזל?</p>
+
+            <div class="difficulty-cards">
+                <div class="difficulty-card" onclick="selectDifficulty(12)">
+                    <div class="difficulty-icon">😊</div>
+                    <h3>קל</h3>
+                    <p>12 חלקים</p>
+                    <div class="difficulty-stars">⭐⭐</div>
+                </div>
+                <div class="difficulty-card" onclick="selectDifficulty(20)">
+                    <div class="difficulty-icon">🤔</div>
+                    <h3>בינוני</h3>
+                    <p>20 חלקים</p>
+                    <div class="difficulty-stars">⭐⭐⭐</div>
+                </div>
+                <div class="difficulty-card" onclick="selectDifficulty(30)">
+                    <div class="difficulty-icon">😤</div>
+                    <h3>קשה</h3>
+                    <p>30 חלקים</p>
+                    <div class="difficulty-stars">⭐⭐⭐⭐⭐</div>
+                </div>
+            </div>
+
+            <button class="btn btn-back" onclick="backToMenu()">
+                ← חזרה לתפריט
+            </button>
+        </div>
+    </div>
+
+    <!-- Puzzle Game Screen -->
+    <div id="puzzleScreen" class="screen">
+        <div class="game-header">
+            <div class="header-left">
+                <button class="btn btn-icon-only" onclick="pauseGame()">⏸️</button>
+                <div class="stage-indicator">
+                    <span class="stage-label">שלב 1</span>
+                    <span class="stage-name">פאזל</span>
+                </div>
+            </div>
+            <div class="header-center">
+                <div class="score-display">
+                    <span class="score-icon">⭐</span>
+                    <span id="currentScore">0</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="timer-display">
+                    <span class="timer-icon">⏱️</span>
+                    <span id="timerDisplay">00:00</span>
+                </div>
+                <div class="progress-indicator">
+                    <span id="piecesPlaced">0</span>/<span id="totalPieces">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="puzzleContainer" class="puzzle-container">
+            <canvas id="puzzleCanvas"></canvas>
+            <div id="piecesTray" class="pieces-tray"></div>
+        </div>
+
+        <div class="puzzle-controls">
+            <button class="btn btn-control" onclick="shufflePieces()">🔀 ערבב</button>
+            <button class="btn btn-control" onclick="showHint()">💡 רמז</button>
+        </div>
+    </div>
+
+    <!-- Geography Quiz Screen -->
+    <div id="quizScreen" class="screen">
+        <div class="game-header">
+            <div class="header-left">
+                <button class="btn btn-icon-only" onclick="pauseGame()">⏸️</button>
+                <div class="stage-indicator">
+                    <span class="stage-label" id="quizStageLabel">שלב 2</span>
+                    <span class="stage-name" id="quizStageName">יבשות</span>
+                </div>
+            </div>
+            <div class="header-center">
+                <div class="score-display">
+                    <span class="score-icon">⭐</span>
+                    <span id="quizScore">0</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="lives-display">
+                    <span id="livesDisplay">❤️❤️❤️</span>
+                </div>
+                <div class="question-progress">
+                    <span id="questionNum">1</span>/<span id="totalQuestions">5</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="quiz-container">
+            <div class="quiz-map-container">
+                <div id="quizMapWrapper" class="quiz-map-wrapper">
+                    <img id="quizMapImage" src="" alt="מפת העולם" class="quiz-map">
+                    <div id="highlightOverlay" class="highlight-overlay"></div>
+                    <div id="cityMarker" class="city-marker"></div>
+                </div>
+            </div>
+
+            <div class="quiz-question-area">
+                <h2 id="quizQuestion" class="quiz-question">מהי היבשת המהבהבת?</h2>
+                <div id="quizOptions" class="quiz-options">
+                    <!-- Options will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="resultsScreen" class="screen">
+        <div class="results-container">
+            <div class="results-header">
+                <div class="trophy-animation">🏆</div>
+                <h1>כל הכבוד!</h1>
+                <p class="results-subtitle">סיימת את כל השלבים!</p>
+            </div>
+
+            <div class="results-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-value" id="finalScore">0</div>
+                    <div class="stat-label">ניקוד סופי</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏱️</div>
+                    <div class="stat-value" id="finalTime">00:00</div>
+                    <div class="stat-label">זמן כולל</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value" id="correctAnswers">0</div>
+                    <div class="stat-label">תשובות נכונות</div>
+                </div>
+            </div>
+
+            <div id="newHighScore" class="new-high-score" style="display: none;">
+                🎉 שיא חדש! 🎉
+            </div>
+
+            <div class="results-actions">
+                <button class="btn btn-primary btn-large" onclick="restartGame()">
+                    🔄 שחק שוב
+                </button>
+                <button class="btn btn-secondary" onclick="backToMenu()">
+                    🏠 תפריט ראשי
+                </button>
+            </div>
+        </div>
+        <div class="confetti-container" id="confetti"></div>
+    </div>
+
+    <!-- Pause Modal -->
+    <div id="pauseModal" class="modal">
+        <div class="modal-content">
+            <h2>⏸️ משחק מושהה</h2>
+            <div class="pause-buttons">
+                <button class="btn btn-primary" onclick="resumeGame()">▶️ המשך</button>
+                <button class="btn btn-secondary" onclick="restartGame()">🔄 התחל מחדש</button>
+                <button class="btn btn-secondary" onclick="backToMenu()">🏠 תפריט ראשי</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loader">
+            <div class="globe-spinner">🌍</div>
+            <p>טוען את המפה...</p>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
