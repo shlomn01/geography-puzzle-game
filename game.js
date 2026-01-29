@@ -1397,45 +1397,41 @@ function highlightMapArea(item, type) {
     const cityMarker = document.getElementById('cityMarker');
     const wrapper = document.getElementById('quizMapWrapper');
 
-    // Calculate the actual rendered position of the image within the container
-    // When using object-fit: contain, the image is centered with possible padding
-    const containerRect = wrapper.getBoundingClientRect();
-    const imgNaturalWidth = mapImg.naturalWidth || 1408;
-    const imgNaturalHeight = mapImg.naturalHeight || 768;
-
-    const containerAspect = containerRect.width / containerRect.height;
-    const imageAspect = imgNaturalWidth / imgNaturalHeight;
-
-    let renderedWidth, renderedHeight, offsetX, offsetY;
-
-    if (imageAspect > containerAspect) {
-        // Image is wider - fits width, has vertical padding
-        renderedWidth = containerRect.width;
-        renderedHeight = containerRect.width / imageAspect;
-        offsetX = 0;
-        offsetY = (containerRect.height - renderedHeight) / 2;
-    } else {
-        // Image is taller - fits height, has horizontal padding
-        renderedHeight = containerRect.height;
-        renderedWidth = containerRect.height * imageAspect;
-        offsetX = (containerRect.width - renderedWidth) / 2;
-        offsetY = 0;
+    // Wait for image to be fully loaded
+    if (!mapImg.complete || mapImg.naturalWidth === 0) {
+        setTimeout(() => highlightMapArea(item, type), 100);
+        return;
     }
+
+    // Get the actual displayed dimensions of the image
+    // Using getBoundingClientRect on the image itself gives us the true rendered size
+    const imgRect = mapImg.getBoundingClientRect();
+    const wrapperRect = wrapper.getBoundingClientRect();
+
+    // Calculate offset from wrapper to image (handles object-fit: contain centering)
+    const offsetX = imgRect.left - wrapperRect.left;
+    const offsetY = imgRect.top - wrapperRect.top;
+
+    // The actual rendered dimensions of the image
+    const renderedWidth = imgRect.width;
+    const renderedHeight = imgRect.height;
 
     if (type === 'cities') {
         // Show city marker
         overlay.innerHTML = '';
         cityMarker.style.display = 'block';
-        // Position relative to actual image area
-        const markerX = offsetX + (item.position.x * renderedWidth);
-        const markerY = offsetY + (item.position.y * renderedHeight);
+
+        // Position relative to wrapper, accounting for image offset
+        const markerX = offsetX + (item.position.x * renderedWidth) - 15; // Center the 30px marker
+        const markerY = offsetY + (item.position.y * renderedHeight) - 15;
+
         cityMarker.style.left = markerX + 'px';
         cityMarker.style.top = markerY + 'px';
     } else {
         // Show flashing area for continents/countries
         cityMarker.style.display = 'none';
 
-        // Calculate position relative to actual image area
+        // Calculate position relative to wrapper, accounting for image offset
         const highlightX = offsetX + (item.bounds.x * renderedWidth);
         const highlightY = offsetY + (item.bounds.y * renderedHeight);
         const highlightW = item.bounds.width * renderedWidth;
@@ -1577,34 +1573,63 @@ function createConfetti() {
 }
 
 function createFireworks(container) {
-    const colors = ['#ff0000', '#ffd700', '#00ff00', '#00bfff', '#ff00ff', '#ff6600', '#ffffff'];
+    // Add firework animation styles first
+    if (!document.getElementById('fireworkStyles')) {
+        const style = document.createElement('style');
+        style.id = 'fireworkStyles';
+        style.textContent = `
+            @keyframes fireworkExplode {
+                0% {
+                    transform: translate(0, 0) scale(1);
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 1;
+                }
+                100% {
+                    transform: translate(var(--dx), var(--dy)) scale(0.3);
+                    opacity: 0;
+                }
+            }
+            @keyframes fireworkGlow {
+                0%, 100% { filter: brightness(1); }
+                50% { filter: brightness(1.5); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
 
-    // Create multiple firework bursts
-    for (let burst = 0; burst < 6; burst++) {
+    const colors = ['#ff3333', '#ffdd33', '#33ff33', '#33ddff', '#ff33ff', '#ff9933', '#ffffff', '#ffaa00'];
+
+    // Create multiple firework bursts across the screen
+    for (let burst = 0; burst < 8; burst++) {
         setTimeout(() => {
-            const centerX = 20 + Math.random() * 60; // Random X position (20-80%)
-            const centerY = 20 + Math.random() * 40; // Random Y position (20-60%)
+            // Random position across the screen
+            const centerX = 10 + Math.random() * 80;
+            const centerY = 10 + Math.random() * 60;
 
             // Create particles for each burst
-            for (let i = 0; i < 30; i++) {
+            const particleCount = 40;
+            for (let i = 0; i < particleCount; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'firework-particle';
 
-                const angle = (i / 30) * Math.PI * 2;
-                const velocity = 50 + Math.random() * 100;
+                const angle = (i / particleCount) * Math.PI * 2 + (Math.random() * 0.3);
+                const velocity = 80 + Math.random() * 120;
                 const color = colors[Math.floor(Math.random() * colors.length)];
+                const size = 4 + Math.random() * 6;
 
                 particle.style.cssText = `
                     position: absolute;
                     left: ${centerX}%;
                     top: ${centerY}%;
-                    width: 6px;
-                    height: 6px;
+                    width: ${size}px;
+                    height: ${size}px;
                     border-radius: 50%;
                     background: ${color};
-                    box-shadow: 0 0 10px ${color}, 0 0 20px ${color}, 0 0 30px ${color};
+                    box-shadow: 0 0 ${size * 2}px ${color}, 0 0 ${size * 4}px ${color};
                     pointer-events: none;
-                    animation: fireworkExplode 1.5s ease-out forwards;
+                    animation: fireworkExplode 1.8s ease-out forwards;
                     --dx: ${Math.cos(angle) * velocity}px;
                     --dy: ${Math.sin(angle) * velocity}px;
                 `;
@@ -1612,36 +1637,17 @@ function createFireworks(container) {
                 container.appendChild(particle);
             }
 
-            // Play coin sound for each burst
-            if (burst < 3) {
+            // Play coin sound for first few bursts
+            if (burst < 4 && GameState.soundEnabled) {
                 playCoinSound();
             }
-        }, burst * 400);
-    }
-
-    // Add firework animation if not exists
-    if (!document.getElementById('fireworkAnimation')) {
-        const style = document.createElement('style');
-        style.id = 'fireworkAnimation';
-        style.textContent = `
-            @keyframes fireworkExplode {
-                0% {
-                    transform: translate(0, 0) scale(1);
-                    opacity: 1;
-                }
-                100% {
-                    transform: translate(var(--dx), var(--dy)) scale(0);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
+        }, burst * 350);
     }
 
     // Clear after animation
     setTimeout(() => {
         container.innerHTML = '';
-    }, 4000);
+    }, 5000);
 }
 
 // ============================================
