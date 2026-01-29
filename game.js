@@ -151,109 +151,93 @@ let sounds = {};
 // - Compass rose is at bottom left
 // - Antarctica is white strip at very bottom
 const GeoData = {
-    // PIXEL MEASUREMENTS from world_map.png (1408x768):
-    // Frame: ~15px on each side
-    // Content area: ~1378x738 pixels
-    // All coordinates below are normalized to full image (0-1)
+    // PIXEL MEASUREMENTS from world_map.png (1408x768) using sharp pixel analysis
+    // All coordinates are normalized (0-1) relative to the full image
+    // Verified: all city positions confirmed on LAND via pixel color analysis
 
     continents: [
-        // North America - Alaska through Mexico/Central America
-        // Left edge ~15px (0.01), right edge ~340px (0.24)
-        // Top ~55px (0.07), bottom ~400px (0.52)
-        { name: 'צפון אמריקה', nameEn: 'North America', bounds: { x: 0.01, y: 0.07, width: 0.23, height: 0.45 } },
+        // North America: pixels left=15, right=519, top=20, bottom=419
+        { name: 'צפון אמריקה', nameEn: 'North America', bounds: { x: 0.011, y: 0.026, width: 0.358, height: 0.520 } },
 
-        // South America - Colombia down to Tierra del Fuego
-        // Left ~200px (0.14), right ~380px (0.27)
-        // Top ~370px (0.48), bottom ~680px (0.88)
-        { name: 'דרום אמריקה', nameEn: 'South America', bounds: { x: 0.14, y: 0.48, width: 0.13, height: 0.40 } },
+        // South America: pixels left=150, right=419, top=340, bottom=718
+        { name: 'דרום אמריקה', nameEn: 'South America', bounds: { x: 0.107, y: 0.443, width: 0.191, height: 0.492 } },
 
-        // Europe - UK, Scandinavia, mainland Europe
-        // Left ~540px (0.38), right ~760px (0.54)
-        // Top ~55px (0.07), bottom ~230px (0.30)
-        { name: 'אירופה', nameEn: 'Europe', bounds: { x: 0.38, y: 0.07, width: 0.16, height: 0.23 } },
+        // Europe: pixels left=520, right=779, top=40, bottom=279
+        { name: 'אירופה', nameEn: 'Europe', bounds: { x: 0.369, y: 0.052, width: 0.184, height: 0.311 } },
 
-        // Africa - Morocco to South Africa
-        // Left ~540px (0.38), right ~820px (0.58)
-        // Top ~215px (0.28), bottom ~600px (0.78)
-        { name: 'אפריקה', nameEn: 'Africa', bounds: { x: 0.38, y: 0.28, width: 0.20, height: 0.50 } },
+        // Africa: pixels left=520, right=849, top=210, bottom=639
+        { name: 'אפריקה', nameEn: 'Africa', bounds: { x: 0.369, y: 0.273, width: 0.234, height: 0.559 } },
 
-        // Asia - Turkey to Japan, Russia to Indonesia
-        // Left ~700px (0.50), right ~1320px (0.94)
-        // Top ~40px (0.05), bottom ~445px (0.58)
-        { name: 'אסיה', nameEn: 'Asia', bounds: { x: 0.50, y: 0.05, width: 0.44, height: 0.53 } },
+        // Asia: pixels left=700, right=1379, top=30, bottom=499
+        { name: 'אסיה', nameEn: 'Asia', bounds: { x: 0.497, y: 0.039, width: 0.482, height: 0.611 } },
 
-        // Australia - main continent
-        // Left ~1100px (0.78), right ~1310px (0.93)
-        // Top ~460px (0.60), bottom ~630px (0.82)
-        { name: 'אוסטרליה', nameEn: 'Australia', bounds: { x: 0.78, y: 0.60, width: 0.15, height: 0.22 } },
+        // Australia: pixels left=1050, right=1367, top=430, bottom=659
+        { name: 'אוסטרליה', nameEn: 'Australia', bounds: { x: 0.746, y: 0.560, width: 0.225, height: 0.298 } },
 
-        // Antarctica - white strip at bottom
-        // Left ~110px (0.08), right ~1300px (0.92)
-        // Top ~700px (0.91), bottom ~753px (0.98)
-        { name: 'אנטארקטיקה', nameEn: 'Antarctica', bounds: { x: 0.08, y: 0.91, width: 0.84, height: 0.07 } }
+        // Antarctica: pixels left=15, right=1392, top=690, bottom=759
+        { name: 'אנטארקטיקה', nameEn: 'Antarctica', bounds: { x: 0.011, y: 0.898, width: 0.978, height: 0.090 } }
     ],
     countries: [
-        // Brazil - eastern South America, large green area
-        // Approximately center-right of South America
-        { name: 'ברזיל', continent: 'דרום אמריקה', bounds: { x: 0.18, y: 0.52, width: 0.08, height: 0.24 } },
+        // Brazil - large eastern South America
+        { name: 'ברזיל', continent: 'דרום אמריקה', bounds: { x: 0.170, y: 0.470, width: 0.120, height: 0.230 } },
 
-        // Egypt - northeast Africa, tan area with pyramids
-        { name: 'מצרים', continent: 'אפריקה', bounds: { x: 0.50, y: 0.30, width: 0.06, height: 0.10 } },
+        // Egypt - northeast Africa, Nile delta area
+        { name: 'מצרים', continent: 'אפריקה', bounds: { x: 0.480, y: 0.310, width: 0.060, height: 0.090 } },
 
-        // India - triangular peninsula
-        { name: 'הודו', continent: 'אסיה', bounds: { x: 0.66, y: 0.32, width: 0.08, height: 0.18 } },
+        // India - triangular peninsula south of Asia mainland
+        { name: 'הודו', continent: 'אסיה', bounds: { x: 0.580, y: 0.360, width: 0.090, height: 0.200 } },
 
         // China - large eastern Asian country
-        { name: 'סין', continent: 'אסיה', bounds: { x: 0.72, y: 0.18, width: 0.14, height: 0.20 } },
+        { name: 'סין', continent: 'אסיה', bounds: { x: 0.740, y: 0.200, width: 0.160, height: 0.200 } },
 
         // USA - between Canada and Mexico
-        { name: 'ארה"ב', continent: 'צפון אמריקה', bounds: { x: 0.03, y: 0.20, width: 0.18, height: 0.18 } },
+        { name: 'ארה"ב', continent: 'צפון אמריקה', bounds: { x: 0.040, y: 0.250, width: 0.220, height: 0.200 } },
 
-        // Russia - massive northern landmass
-        { name: 'רוסיה', continent: 'אסיה', bounds: { x: 0.52, y: 0.05, width: 0.42, height: 0.18 } },
+        // Russia - massive northern landmass spanning Europe and Asia
+        { name: 'רוסיה', continent: 'אסיה', bounds: { x: 0.500, y: 0.050, width: 0.470, height: 0.200 } },
 
         // Australia - same as continent
-        { name: 'אוסטרליה', continent: 'אוסטרליה', bounds: { x: 0.78, y: 0.60, width: 0.15, height: 0.22 } },
+        { name: 'אוסטרליה', continent: 'אוסטרליה', bounds: { x: 0.746, y: 0.560, width: 0.225, height: 0.298 } },
 
         // Canada - northern North America
-        { name: 'קנדה', continent: 'צפון אמריקה', bounds: { x: 0.03, y: 0.07, width: 0.20, height: 0.15 } },
+        { name: 'קנדה', continent: 'צפון אמריקה', bounds: { x: 0.011, y: 0.026, width: 0.280, height: 0.230 } },
 
         // Argentina - southern South America
-        { name: 'ארגנטינה', continent: 'דרום אמריקה', bounds: { x: 0.17, y: 0.70, width: 0.06, height: 0.18 } },
+        { name: 'ארגנטינה', continent: 'דרום אמריקה', bounds: { x: 0.150, y: 0.700, width: 0.080, height: 0.230 } },
 
         // Japan - island chain east of Korea
-        { name: 'יפן', continent: 'אסיה', bounds: { x: 0.87, y: 0.24, width: 0.05, height: 0.14 } }
+        { name: 'יפן', continent: 'אסיה', bounds: { x: 0.860, y: 0.250, width: 0.060, height: 0.120 } }
     ],
     cities: [
-        // New York - US east coast
-        { name: 'ניו יורק', country: 'ארה"ב', position: { x: 0.19, y: 0.27 } },
+        // New York - US east coast, pixel (350, 310) LAND ✓
+        { name: 'ניו יורק', country: 'ארה"ב', position: { x: 0.249, y: 0.404 } },
 
-        // London - British Isles
-        { name: 'לונדון', country: 'בריטניה', position: { x: 0.44, y: 0.17 } },
+        // London - British Isles, pixel (659, 227) LAND ✓
+        { name: 'לונדון', country: 'בריטניה', position: { x: 0.468, y: 0.296 } },
 
-        // Tokyo - Japan
-        { name: 'טוקיו', country: 'יפן', position: { x: 0.89, y: 0.28 } },
+        // Tokyo - Japan Honshu island, pixel (1248, 232) LAND ✓
+        { name: 'טוקיו', country: 'יפן', position: { x: 0.886, y: 0.302 } },
 
-        // Paris - France
-        { name: 'פריז', country: 'צרפת', position: { x: 0.45, y: 0.20 } },
+        // Paris - France, pixel (690, 237) LAND ✓ [USER CONFIRMED]
+        { name: 'פריז', country: 'צרפת', position: { x: 0.490, y: 0.309 } },
 
-        // Sydney - southeast Australia
-        { name: 'סידני', country: 'אוסטרליה', position: { x: 0.90, y: 0.75 } },
+        // Sydney - SE Australia coast, pixel (1292, 575) LAND ✓
+        { name: 'סידני', country: 'אוסטרליה', position: { x: 0.918, y: 0.749 } },
 
-        // Cairo - Egypt
-        { name: 'קהיר', country: 'מצרים', position: { x: 0.52, y: 0.32 } },
+        // Cairo - Egypt Nile delta, pixel (711, 270) LAND ✓
+        { name: 'קהיר', country: 'מצרים', position: { x: 0.505, y: 0.352 } },
 
-        // Mumbai - India west coast
-        { name: 'מומביי', country: 'הודו', position: { x: 0.68, y: 0.38 } },
+        // Mumbai - India west coast, pixel (850, 375) LAND ✓
+        { name: 'מומביי', country: 'הודו', position: { x: 0.604, y: 0.488 } },
 
-        // Rio de Janeiro - Brazil southeast coast
-        { name: 'ריו דה ז\'נרו', country: 'ברזיל', position: { x: 0.24, y: 0.67 } },
+        // Rio de Janeiro - Brazil SE coast, pixel (420, 494) LAND ✓
+        { name: 'ריו דה ז\'נרו', country: 'ברזיל', position: { x: 0.298, y: 0.643 } },
 
-        // Moscow - western Russia
-        { name: 'מוסקבה', country: 'רוסיה', position: { x: 0.56, y: 0.14 } },
+        // Moscow - western Russia, pixel (756, 171) LAND ✓
+        { name: 'מוסקבה', country: 'רוסיה', position: { x: 0.537, y: 0.223 } },
 
-        // Beijing - northern China
-        { name: 'בייג\'ינג', country: 'סין', position: { x: 0.80, y: 0.26 } }
+        // Beijing - northern China, pixel (1182, 245) LAND ✓
+        { name: 'בייג\'ינג', country: 'סין', position: { x: 0.839, y: 0.319 } }
     ]
 };
 
