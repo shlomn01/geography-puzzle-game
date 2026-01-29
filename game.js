@@ -1450,6 +1450,19 @@ function highlightMapArea(item, type) {
         offsetY = 0;
     }
 
+    // Debug logging
+    console.log('=== highlightMapArea Debug ===');
+    console.log('Item:', item.name, type);
+    console.log('Element size:', elementWidth, 'x', elementHeight);
+    console.log('Natural size:', naturalWidth, 'x', naturalHeight);
+    console.log('Image aspect:', imageAspect, 'Element aspect:', elementAspect);
+    console.log('Rendered size:', renderedWidth, 'x', renderedHeight);
+    console.log('Offset:', offsetX, offsetY);
+    if (item.bounds) {
+        console.log('Bounds:', item.bounds);
+        console.log('Calculated position:', offsetX + (item.bounds.x * renderedWidth), offsetY + (item.bounds.y * renderedHeight));
+    }
+
     if (type === 'cities') {
         // Show city marker
         overlay.innerHTML = '';
