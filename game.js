@@ -1421,46 +1421,29 @@ function highlightMapArea(item, type) {
         return;
     }
 
-    // Get the element dimensions (container size)
-    const elementWidth = mapImg.clientWidth;
-    const elementHeight = mapImg.clientHeight;
+    // Get the actual bounding rectangles
+    const imgRect = mapImg.getBoundingClientRect();
+    const wrapperRect = wrapper.getBoundingClientRect();
 
-    // Get the natural image dimensions
-    const naturalWidth = mapImg.naturalWidth;
-    const naturalHeight = mapImg.naturalHeight;
+    // Calculate offset from wrapper to image
+    const offsetX = imgRect.left - wrapperRect.left;
+    const offsetY = imgRect.top - wrapperRect.top;
 
-    // Calculate the actual rendered image size with object-fit: contain
-    // The image maintains aspect ratio and fits within the container
-    const imageAspect = naturalWidth / naturalHeight;
-    const elementAspect = elementWidth / elementHeight;
-
-    let renderedWidth, renderedHeight, offsetX, offsetY;
-
-    if (imageAspect > elementAspect) {
-        // Image is wider than container - fit to width
-        renderedWidth = elementWidth;
-        renderedHeight = elementWidth / imageAspect;
-        offsetX = 0;
-        offsetY = (elementHeight - renderedHeight) / 2;
-    } else {
-        // Image is taller than container - fit to height
-        renderedHeight = elementHeight;
-        renderedWidth = elementHeight * imageAspect;
-        offsetX = (elementWidth - renderedWidth) / 2;
-        offsetY = 0;
-    }
+    // The actual rendered dimensions of the image
+    const renderedWidth = imgRect.width;
+    const renderedHeight = imgRect.height;
 
     // Debug logging
     console.log('=== highlightMapArea Debug ===');
     console.log('Item:', item.name, type);
-    console.log('Element size:', elementWidth, 'x', elementHeight);
-    console.log('Natural size:', naturalWidth, 'x', naturalHeight);
-    console.log('Image aspect:', imageAspect, 'Element aspect:', elementAspect);
-    console.log('Rendered size:', renderedWidth, 'x', renderedHeight);
-    console.log('Offset:', offsetX, offsetY);
+    console.log('Wrapper rect:', wrapperRect.width, 'x', wrapperRect.height);
+    console.log('Image rect:', imgRect.width, 'x', imgRect.height);
+    console.log('Offset from wrapper:', offsetX, offsetY);
     if (item.bounds) {
         console.log('Bounds:', item.bounds);
-        console.log('Calculated position:', offsetX + (item.bounds.x * renderedWidth), offsetY + (item.bounds.y * renderedHeight));
+        const calcX = offsetX + (item.bounds.x * renderedWidth);
+        const calcY = offsetY + (item.bounds.y * renderedHeight);
+        console.log('Calculated position:', calcX, calcY);
     }
 
     if (type === 'cities') {
@@ -1478,11 +1461,14 @@ function highlightMapArea(item, type) {
         // Show flashing area for continents/countries
         cityMarker.style.display = 'none';
 
-        // Calculate position relative to wrapper, accounting for image offset
+        // Calculate position relative to the rendered image area
+        // Convert from image coordinates to screen pixels
         const highlightX = offsetX + (item.bounds.x * renderedWidth);
         const highlightY = offsetY + (item.bounds.y * renderedHeight);
         const highlightW = item.bounds.width * renderedWidth;
         const highlightH = item.bounds.height * renderedHeight;
+
+        console.log('Highlight rect:', highlightX, highlightY, highlightW, highlightH);
 
         const highlightDiv = document.createElement('div');
         highlightDiv.className = 'area-highlight';
