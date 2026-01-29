@@ -252,29 +252,25 @@ function initAudio() {
 }
 
 function generateSounds() {
-    // Success sound - pleasant ascending notes with vibrato
+    // Success sound - Mario coin sound
     sounds.success = () => {
         if (!GameState.soundEnabled || !audioContext) return;
-        playViolinNote(523.25, 0.15, 0.3);
-        setTimeout(() => playViolinNote(659.25, 0.15, 0.3), 150);
-        setTimeout(() => playViolinNote(783.99, 0.2, 0.35), 300);
+        playCoinSound();
     };
 
-    // Fail sound - descending sad violin
+    // Fail sound - Mario style "boop" (wrong answer)
     sounds.fail = () => {
         if (!GameState.soundEnabled || !audioContext) return;
-        playViolinNote(392, 0.2, 0.25);
-        setTimeout(() => playViolinNote(349.23, 0.2, 0.2), 200);
-        setTimeout(() => playViolinNote(293.66, 0.3, 0.15), 400);
+        playWrongSound();
     };
 
-    // Snap sound - pizzicato pluck
+    // Snap sound - quick click when piece snaps
     sounds.snap = () => {
         if (!GameState.soundEnabled || !audioContext) return;
-        playPizzicato(440, 0.1);
+        playSnapSound();
     };
 
-    // Complete sound - Super Mario style coin collect
+    // Complete sound - Mario coin sound (same as success)
     sounds.complete = () => {
         if (!GameState.soundEnabled || !audioContext) return;
         playCoinSound();
@@ -369,28 +365,71 @@ function playCoinSound() {
     osc1.frequency.setValueAtTime(987.77, now);
 
     const gain1 = audioContext.createGain();
-    gain1.gain.setValueAtTime(0.3, now);
-    gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+    gain1.gain.setValueAtTime(0.2, now);
+    gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
 
     osc1.connect(gain1);
     gain1.connect(audioContext.destination);
     osc1.start(now);
-    osc1.stop(now + 0.1);
+    osc1.stop(now + 0.08);
 
     // Second note (E6 - 1318.51 Hz) - the classic Mario coin "ding"
     const osc2 = audioContext.createOscillator();
     osc2.type = 'square';
-    osc2.frequency.setValueAtTime(1318.51, now + 0.1);
+    osc2.frequency.setValueAtTime(1318.51, now + 0.08);
 
     const gain2 = audioContext.createGain();
     gain2.gain.setValueAtTime(0, now);
-    gain2.gain.setValueAtTime(0.3, now + 0.1);
-    gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+    gain2.gain.setValueAtTime(0.2, now + 0.08);
+    gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
 
     osc2.connect(gain2);
     gain2.connect(audioContext.destination);
-    osc2.start(now + 0.1);
-    osc2.stop(now + 0.5);
+    osc2.start(now + 0.08);
+    osc2.stop(now + 0.4);
+}
+
+// Mario style wrong answer sound
+function playWrongSound() {
+    if (!audioContext) return;
+
+    const now = audioContext.currentTime;
+
+    // Low descending tone
+    const osc = audioContext.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(200, now);
+    osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+
+    const gain = audioContext.createGain();
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.start(now);
+    osc.stop(now + 0.35);
+}
+
+// Quick snap/click sound when puzzle piece snaps
+function playSnapSound() {
+    if (!audioContext) return;
+
+    const now = audioContext.currentTime;
+
+    // Quick high pitched click
+    const osc = audioContext.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, now);
+
+    const gain = audioContext.createGain();
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.start(now);
+    osc.stop(now + 0.06);
 }
 
 // Pizzicato (plucked string) sound
