@@ -1409,11 +1409,34 @@ function generateOptions(correct, type) {
     return options;
 }
 
-function highlightMapArea(item, type) {
+function positionOverlayOnImage() {
+    // Position the overlay and city-marker container exactly on top of the rendered image
     const mapImg = document.getElementById('quizMapImage');
     const overlay = document.getElementById('highlightOverlay');
     const cityMarker = document.getElementById('cityMarker');
     const wrapper = document.getElementById('quizMapWrapper');
+
+    const imgRect = mapImg.getBoundingClientRect();
+    const wrapperRect = wrapper.getBoundingClientRect();
+
+    // Offset from wrapper to the actual rendered image
+    const offsetX = imgRect.left - wrapperRect.left;
+    const offsetY = imgRect.top - wrapperRect.top;
+
+    // Position overlay exactly on top of the image
+    overlay.style.left = offsetX + 'px';
+    overlay.style.top = offsetY + 'px';
+    overlay.style.width = imgRect.width + 'px';
+    overlay.style.height = imgRect.height + 'px';
+    // Reset right/bottom since we're using explicit width/height
+    overlay.style.right = 'auto';
+    overlay.style.bottom = 'auto';
+}
+
+function highlightMapArea(item, type) {
+    const mapImg = document.getElementById('quizMapImage');
+    const overlay = document.getElementById('highlightOverlay');
+    const cityMarker = document.getElementById('cityMarker');
 
     // Wait for image to be fully loaded
     if (!mapImg.complete || mapImg.naturalWidth === 0) {
@@ -1421,63 +1444,43 @@ function highlightMapArea(item, type) {
         return;
     }
 
-    // Get the actual bounding rectangles
-    const imgRect = mapImg.getBoundingClientRect();
-    const wrapperRect = wrapper.getBoundingClientRect();
-
-    // Calculate offset from wrapper to image
-    const offsetX = imgRect.left - wrapperRect.left;
-    const offsetY = imgRect.top - wrapperRect.top;
-
-    // The actual rendered dimensions of the image
-    const renderedWidth = imgRect.width;
-    const renderedHeight = imgRect.height;
-
-    // Debug logging
-    console.log('=== highlightMapArea Debug ===');
-    console.log('Item:', item.name, type);
-    console.log('Wrapper rect:', wrapperRect.width, 'x', wrapperRect.height);
-    console.log('Image rect:', imgRect.width, 'x', imgRect.height);
-    console.log('Offset from wrapper:', offsetX, offsetY);
-    if (item.bounds) {
-        console.log('Bounds:', item.bounds);
-        const calcX = offsetX + (item.bounds.x * renderedWidth);
-        const calcY = offsetY + (item.bounds.y * renderedHeight);
-        console.log('Calculated position:', calcX, calcY);
-    }
+    // First, position overlay exactly on the image
+    positionOverlayOnImage();
 
     if (type === 'cities') {
-        // Show city marker
+        // Show city marker as a child of overlay using percentage positioning
         overlay.innerHTML = '';
-        cityMarker.style.display = 'block';
-
-        // Position relative to wrapper, accounting for image offset
-        const markerX = offsetX + (item.position.x * renderedWidth) - 15; // Center the 30px marker
-        const markerY = offsetY + (item.position.y * renderedHeight) - 15;
-
-        cityMarker.style.left = markerX + 'px';
-        cityMarker.style.top = markerY + 'px';
-    } else {
-        // Show flashing area for continents/countries
         cityMarker.style.display = 'none';
 
-        // Calculate position relative to the rendered image area
-        // Convert from image coordinates to screen pixels
-        const highlightX = offsetX + (item.bounds.x * renderedWidth);
-        const highlightY = offsetY + (item.bounds.y * renderedHeight);
-        const highlightW = item.bounds.width * renderedWidth;
-        const highlightH = item.bounds.height * renderedHeight;
-
-        console.log('Highlight rect:', highlightX, highlightY, highlightW, highlightH);
+        // Create a marker inside the overlay using percentages
+        const marker = document.createElement('div');
+        marker.style.cssText = `
+            position: absolute;
+            left: ${item.position.x * 100}%;
+            top: ${item.position.y * 100}%;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff6b6b 0%, #ff0000 70%);
+            border: 3px solid #ffffff;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.8), 0 0 30px rgba(255, 0, 0, 0.4);
+            transform: translate(-50%, -50%);
+            animation: flashHighlight 0.8s ease-in-out infinite;
+            pointer-events: none;
+        `;
+        overlay.appendChild(marker);
+    } else {
+        // Show flashing area for continents/countries using percentages
+        cityMarker.style.display = 'none';
 
         const highlightDiv = document.createElement('div');
         highlightDiv.className = 'area-highlight';
         highlightDiv.style.cssText = `
             position: absolute;
-            left: ${highlightX}px;
-            top: ${highlightY}px;
-            width: ${highlightW}px;
-            height: ${highlightH}px;
+            left: ${item.bounds.x * 100}%;
+            top: ${item.bounds.y * 100}%;
+            width: ${item.bounds.width * 100}%;
+            height: ${item.bounds.height * 100}%;
             background: rgba(255, 0, 0, 0.3);
             border: 3px solid #ff0000;
             border-radius: 10px;
@@ -1488,19 +1491,19 @@ function highlightMapArea(item, type) {
 
         overlay.innerHTML = '';
         overlay.appendChild(highlightDiv);
+    }
 
-        // Add animation keyframes if not exists
-        if (!document.getElementById('flashAnimation')) {
-            const style = document.createElement('style');
-            style.id = 'flashAnimation';
-            style.textContent = `
-                @keyframes flashHighlight {
-                    0%, 100% { opacity: 0.3; transform: scale(1); }
-                    50% { opacity: 0.7; transform: scale(1.02); }
-                }
-            `;
-            document.head.appendChild(style);
-        }
+    // Add animation keyframes if not exists
+    if (!document.getElementById('flashAnimation')) {
+        const style = document.createElement('style');
+        style.id = 'flashAnimation';
+        style.textContent = `
+            @keyframes flashHighlight {
+                0%, 100% { opacity: 0.3; transform: scale(1); }
+                50% { opacity: 0.7; transform: scale(1.02); }
+            }
+        `;
+        document.head.appendChild(style);
     }
 }
 

@@ -638,11 +638,9 @@ html, body {
 
 .highlight-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
     pointer-events: none;
+    /* Dimensions and position are set dynamically by positionOverlayOnImage() */
+    overflow: visible;
 }
 
 .city-marker {
