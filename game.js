@@ -141,101 +141,105 @@ let sounds = {};
 // Geography Data - Coordinates match the SVG map
 // ============================================
 // Geography Data - Coordinates calibrated for the illustrated world map (1408x768)
-// The map has a decorative wooden frame around the edges
-// Coordinates are normalized (0-1) relative to the image dimensions
-// x: 0 = left edge, 1 = right edge
-// y: 0 = top edge, 1 = bottom edge
+// IMPORTANT: Coordinates are normalized (0-1) relative to the CONTENT AREA
+// The map has a decorative wooden frame (~2% on each side)
+// Content area starts at approximately x=0.02, y=0.02 and ends at x=0.98, y=0.98
+//
+// Calibration based on visual analysis of world_map.png:
+// - Map uses Mercator-style projection
+// - Greenland is large white area at top center
+// - Compass rose is at bottom left
+// - Antarctica is white strip at very bottom
 const GeoData = {
     continents: [
-        // North America - green landmass in the left portion (Canada, USA, Mexico, Central America)
-        // Spans roughly from x=0.04 to x=0.25, y=0.06 to y=0.52
-        { name: 'צפון אמריקה', nameEn: 'North America', bounds: { x: 0.04, y: 0.06, width: 0.21, height: 0.46 } },
+        // North America - includes Canada, USA, Mexico, Central America, Caribbean
+        // Visible from left side of map, green landmass with Alaska on far left
+        { name: 'צפון אמריקה', nameEn: 'North America', bounds: { x: 0.03, y: 0.08, width: 0.20, height: 0.42 } },
 
-        // South America - green landmass below North America
-        // Spans roughly from x=0.17 to x=0.30, y=0.52 to y=0.92
-        { name: 'דרום אמריקה', nameEn: 'South America', bounds: { x: 0.17, y: 0.52, width: 0.13, height: 0.40 } },
+        // South America - below North America, connected by Central America
+        // Green continent tapering toward bottom
+        { name: 'דרום אמריקה', nameEn: 'South America', bounds: { x: 0.13, y: 0.50, width: 0.12, height: 0.38 } },
 
-        // Europe - small green area above Africa (British Isles, Scandinavia, mainland Europe)
-        // Spans roughly from x=0.38 to x=0.52, y=0.06 to y=0.30
-        { name: 'אירופה', nameEn: 'Europe', bounds: { x: 0.38, y: 0.06, width: 0.14, height: 0.24 } },
+        // Europe - small area above Mediterranean, between Atlantic and Asia
+        // Includes British Isles, Scandinavia, mainland Europe
+        { name: 'אירופה', nameEn: 'Europe', bounds: { x: 0.40, y: 0.08, width: 0.12, height: 0.22 } },
 
-        // Africa - large tan/yellow continent in center
-        // Spans roughly from x=0.38 to x=0.58, y=0.28 to y=0.78
-        { name: 'אפריקה', nameEn: 'Africa', bounds: { x: 0.38, y: 0.28, width: 0.20, height: 0.50 } },
+        // Africa - large continent below Europe, mostly tan/yellow (Sahara) and green
+        // Extends from Mediterranean to South Africa
+        { name: 'אפריקה', nameEn: 'Africa', bounds: { x: 0.40, y: 0.30, width: 0.18, height: 0.48 } },
 
-        // Asia - large green/tan landmass on the right (Russia, China, India, Middle East, Japan)
-        // Spans roughly from x=0.50 to x=0.92, y=0.04 to y=0.58
-        { name: 'אסיה', nameEn: 'Asia', bounds: { x: 0.50, y: 0.04, width: 0.42, height: 0.54 } },
+        // Asia - largest continent, from Middle East to Japan
+        // Includes Russia, China, India, Southeast Asia
+        { name: 'אסיה', nameEn: 'Asia', bounds: { x: 0.52, y: 0.06, width: 0.42, height: 0.52 } },
 
-        // Australia - yellow/orange island continent in bottom right
-        // Spans roughly from x=0.78 to x=0.92, y=0.60 to y=0.82
-        { name: 'אוסטרליה', nameEn: 'Australia', bounds: { x: 0.78, y: 0.60, width: 0.14, height: 0.22 } },
+        // Australia - orange/tan continent in bottom right
+        // Island continent with distinctive shape
+        { name: 'אוסטרליה', nameEn: 'Australia', bounds: { x: 0.79, y: 0.62, width: 0.12, height: 0.20 } },
 
-        // Antarctica - white strip at very bottom of map
-        // Spans roughly from x=0.10 to x=0.90, y=0.92 to y=0.98
-        { name: 'אנטארקטיקה', nameEn: 'Antarctica', bounds: { x: 0.10, y: 0.92, width: 0.80, height: 0.06 } }
+        // Antarctica - white/ice strip at very bottom of map
+        { name: 'אנטארקטיקה', nameEn: 'Antarctica', bounds: { x: 0.08, y: 0.91, width: 0.84, height: 0.07 } }
     ],
     countries: [
-        // Brazil - eastern/central South America (large green area)
-        { name: 'ברזיל', continent: 'דרום אמריקה', bounds: { x: 0.20, y: 0.54, width: 0.09, height: 0.20 } },
+        // Brazil - largest country in South America, eastern portion
+        { name: 'ברזיל', continent: 'דרום אמריקה', bounds: { x: 0.17, y: 0.52, width: 0.08, height: 0.22 } },
 
-        // Egypt - northeast Africa (near pyramids, tan area by Mediterranean)
-        { name: 'מצרים', continent: 'אפריקה', bounds: { x: 0.48, y: 0.30, width: 0.06, height: 0.10 } },
+        // Egypt - northeast Africa, Nile River, pyramids visible
+        { name: 'מצרים', continent: 'אפריקה', bounds: { x: 0.48, y: 0.32, width: 0.06, height: 0.10 } },
 
-        // India - southern Asia peninsula (green triangle pointing south)
-        { name: 'הודו', continent: 'אסיה', bounds: { x: 0.64, y: 0.32, width: 0.08, height: 0.16 } },
+        // India - triangular peninsula in South Asia
+        { name: 'הודו', continent: 'אסיה', bounds: { x: 0.65, y: 0.32, width: 0.08, height: 0.18 } },
 
-        // China - eastern Asia (large area east of India)
-        { name: 'סין', continent: 'אסיה', bounds: { x: 0.70, y: 0.18, width: 0.14, height: 0.20 } },
+        // China - large eastern Asian country
+        { name: 'סין', continent: 'אסיה', bounds: { x: 0.72, y: 0.20, width: 0.12, height: 0.18 } },
 
-        // USA - central North America (below Canada, above Mexico)
-        { name: 'ארה"ב', continent: 'צפון אמריקה', bounds: { x: 0.05, y: 0.20, width: 0.17, height: 0.18 } },
+        // USA - central North America between Canada and Mexico
+        { name: 'ארה"ב', continent: 'צפון אמריקה', bounds: { x: 0.04, y: 0.22, width: 0.16, height: 0.16 } },
 
-        // Russia - huge northern landmass spanning Europe to Asia
-        { name: 'רוסיה', continent: 'אסיה', bounds: { x: 0.50, y: 0.04, width: 0.40, height: 0.18 } },
+        // Russia - huge northern country spanning Europe to Pacific
+        { name: 'רוסיה', continent: 'אסיה', bounds: { x: 0.52, y: 0.06, width: 0.40, height: 0.18 } },
 
-        // Australia country - same as continent
-        { name: 'אוסטרליה', continent: 'אוסטרליה', bounds: { x: 0.78, y: 0.60, width: 0.14, height: 0.22 } },
+        // Australia - same as continent bounds
+        { name: 'אוסטרליה', continent: 'אוסטרליה', bounds: { x: 0.79, y: 0.62, width: 0.12, height: 0.20 } },
 
-        // Canada - northern North America (includes Greenland area)
-        { name: 'קנדה', continent: 'צפון אמריקה', bounds: { x: 0.05, y: 0.06, width: 0.20, height: 0.16 } },
+        // Canada - northern North America with distinct shape
+        { name: 'קנדה', continent: 'צפון אמריקה', bounds: { x: 0.04, y: 0.08, width: 0.18, height: 0.16 } },
 
-        // Argentina - southern South America (long thin country)
-        { name: 'ארגנטינה', continent: 'דרום אמריקה', bounds: { x: 0.18, y: 0.72, width: 0.06, height: 0.18 } },
+        // Argentina - southern South America, long thin country
+        { name: 'ארגנטינה', continent: 'דרום אמריקה', bounds: { x: 0.16, y: 0.70, width: 0.05, height: 0.18 } },
 
-        // Japan - island chain east of China/Korea
-        { name: 'יפן', continent: 'אסיה', bounds: { x: 0.86, y: 0.24, width: 0.05, height: 0.12 } }
+        // Japan - island chain east of Korea/China
+        { name: 'יפן', continent: 'אסיה', bounds: { x: 0.86, y: 0.26, width: 0.04, height: 0.12 } }
     ],
     cities: [
-        // New York - east coast USA
-        { name: 'ניו יורק', country: 'ארה"ב', position: { x: 0.21, y: 0.28 } },
+        // New York - east coast USA, northeast region
+        { name: 'ניו יורק', country: 'ארה"ב', position: { x: 0.18, y: 0.28 } },
 
-        // London - British Isles (small island northwest of Europe mainland)
-        { name: 'לונדון', country: 'בריטניה', position: { x: 0.42, y: 0.16 } },
+        // London - British Isles, small islands northwest of mainland Europe
+        { name: 'לונדון', country: 'בריטניה', position: { x: 0.43, y: 0.18 } },
 
-        // Tokyo - Japan main island
-        { name: 'טוקיו', country: 'יפן', position: { x: 0.88, y: 0.28 } },
+        // Tokyo - main island of Japan
+        { name: 'טוקיו', country: 'יפן', position: { x: 0.88, y: 0.30 } },
 
-        // Paris - France (north-central Europe)
-        { name: 'פריז', country: 'צרפת', position: { x: 0.43, y: 0.19 } },
+        // Paris - northern France
+        { name: 'פריז', country: 'צרפת', position: { x: 0.44, y: 0.21 } },
 
         // Sydney - southeast coast of Australia
-        { name: 'סידני', country: 'אוסטרליה', position: { x: 0.89, y: 0.74 } },
+        { name: 'סידני', country: 'אוסטרליה', position: { x: 0.89, y: 0.76 } },
 
-        // Cairo - Egypt, near the Nile delta
-        { name: 'קהיר', country: 'מצרים', position: { x: 0.50, y: 0.32 } },
+        // Cairo - Egypt, near Nile delta at Mediterranean
+        { name: 'קהיר', country: 'מצרים', position: { x: 0.51, y: 0.34 } },
 
         // Mumbai - western coast of India
-        { name: 'מומביי', country: 'הודו', position: { x: 0.66, y: 0.38 } },
+        { name: 'מומביי', country: 'הודו', position: { x: 0.67, y: 0.40 } },
 
         // Rio de Janeiro - southeastern coast of Brazil
-        { name: 'ריו דה ז\'נרו', country: 'ברזיל', position: { x: 0.27, y: 0.68 } },
+        { name: 'ריו דה ז\'נרו', country: 'ברזיל', position: { x: 0.22, y: 0.68 } },
 
-        // Moscow - western Russia (near Europe)
-        { name: 'מוסקבה', country: 'רוסיה', position: { x: 0.54, y: 0.14 } },
+        // Moscow - western Russia
+        { name: 'מוסקבה', country: 'רוסיה', position: { x: 0.55, y: 0.16 } },
 
         // Beijing - northern China
-        { name: 'בייג\'ינג', country: 'סין', position: { x: 0.80, y: 0.26 } }
+        { name: 'בייג\'ינג', country: 'סין', position: { x: 0.78, y: 0.28 } }
     ]
 };
 
@@ -1403,18 +1407,34 @@ function highlightMapArea(item, type) {
         return;
     }
 
-    // Get the actual displayed dimensions of the image
-    // Using getBoundingClientRect on the image itself gives us the true rendered size
-    const imgRect = mapImg.getBoundingClientRect();
-    const wrapperRect = wrapper.getBoundingClientRect();
+    // Get the element dimensions (container size)
+    const elementWidth = mapImg.clientWidth;
+    const elementHeight = mapImg.clientHeight;
 
-    // Calculate offset from wrapper to image (handles object-fit: contain centering)
-    const offsetX = imgRect.left - wrapperRect.left;
-    const offsetY = imgRect.top - wrapperRect.top;
+    // Get the natural image dimensions
+    const naturalWidth = mapImg.naturalWidth;
+    const naturalHeight = mapImg.naturalHeight;
 
-    // The actual rendered dimensions of the image
-    const renderedWidth = imgRect.width;
-    const renderedHeight = imgRect.height;
+    // Calculate the actual rendered image size with object-fit: contain
+    // The image maintains aspect ratio and fits within the container
+    const imageAspect = naturalWidth / naturalHeight;
+    const elementAspect = elementWidth / elementHeight;
+
+    let renderedWidth, renderedHeight, offsetX, offsetY;
+
+    if (imageAspect > elementAspect) {
+        // Image is wider than container - fit to width
+        renderedWidth = elementWidth;
+        renderedHeight = elementWidth / imageAspect;
+        offsetX = 0;
+        offsetY = (elementHeight - renderedHeight) / 2;
+    } else {
+        // Image is taller than container - fit to height
+        renderedHeight = elementHeight;
+        renderedWidth = elementHeight * imageAspect;
+        offsetX = (elementWidth - renderedWidth) / 2;
+        offsetY = 0;
+    }
 
     if (type === 'cities') {
         // Show city marker
