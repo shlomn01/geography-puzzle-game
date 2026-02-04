@@ -152,341 +152,39 @@ let sounds = {};
 // - Antarctica is white strip at very bottom
 const GeoData = {
     // All coordinates are normalized (0-1) relative to the full image (1408x768)
-    // Continent outlines auto-generated from pixel analysis of world_map.png
-    // Country outlines manually defined for accurate polygon highlighting
+    // Highlighting is done via pixel analysis - detecting actual land pixels on the map
+    // bounds define the scan region for each continent/country
 
     continents: [
-        {
-            name: 'צפון אמריקה', nameEn: 'North America',
-            bounds: { x: 0.011, y: 0.026, width: 0.358, height: 0.520 },
-            outline: [
-                [0.011,0.026],[0.090,0.026],[0.200,0.030],[0.300,0.026],[0.369,0.026],
-                [0.369,0.047],[0.369,0.120],[0.369,0.214],
-                [0.363,0.234],[0.337,0.245],[0.343,0.255],[0.313,0.266],
-                [0.330,0.286],[0.337,0.328],[0.312,0.339],
-                [0.350,0.349],[0.352,0.370],[0.346,0.391],[0.308,0.401],
-                [0.366,0.411],[0.362,0.432],[0.369,0.443],
-                [0.268,0.464],[0.296,0.484],[0.242,0.495],
-                [0.278,0.505],[0.256,0.516],[0.315,0.526],[0.319,0.536],
-                [0.011,0.536]
-            ]
-        },
-        {
-            name: 'דרום אמריקה', nameEn: 'South America',
-            bounds: { x: 0.107, y: 0.443, width: 0.191, height: 0.492 },
-            outline: [
-                [0.200,0.445],[0.250,0.445],[0.297,0.453],
-                [0.297,0.484],[0.278,0.474],[0.297,0.500],
-                [0.297,0.530],[0.257,0.578],[0.267,0.620],
-                [0.263,0.651],[0.256,0.724],[0.286,0.766],
-                [0.283,0.776],[0.250,0.755],[0.224,0.800],
-                [0.224,0.850],[0.226,0.911],[0.200,0.930],
-                [0.150,0.920],[0.107,0.901],[0.107,0.859],
-                [0.115,0.839],[0.107,0.828],[0.114,0.807],
-                [0.109,0.786],[0.130,0.770],[0.168,0.661],
-                [0.161,0.672],[0.176,0.682],[0.172,0.693],
-                [0.190,0.620],[0.175,0.580],[0.118,0.540],
-                [0.178,0.490],[0.200,0.470]
-            ]
-        },
-        {
-            name: 'אירופה', nameEn: 'Europe',
-            bounds: { x: 0.369, y: 0.052, width: 0.184, height: 0.311 },
-            outline: [
-                [0.416,0.052],[0.422,0.063],[0.460,0.063],
-                [0.524,0.083],[0.537,0.094],[0.467,0.104],
-                [0.470,0.115],[0.425,0.125],[0.409,0.146],
-                [0.553,0.156],[0.548,0.200],[0.548,0.354],
-                [0.500,0.354],[0.413,0.354],[0.372,0.344],
-                [0.375,0.302],[0.449,0.292],[0.449,0.281],
-                [0.426,0.260],[0.396,0.250],[0.472,0.240],
-                [0.494,0.219],[0.369,0.208],[0.369,0.130],
-                [0.369,0.052]
-            ]
-        },
-        {
-            name: 'אפריקה', nameEn: 'Africa',
-            bounds: { x: 0.369, y: 0.273, width: 0.234, height: 0.559 },
-            outline: [
-                [0.453,0.280],[0.500,0.273],[0.560,0.273],[0.602,0.273],
-                [0.602,0.350],[0.602,0.450],[0.602,0.555],
-                [0.580,0.617],[0.582,0.638],[0.602,0.648],
-                [0.598,0.711],[0.563,0.721],[0.548,0.753],
-                [0.517,0.773],[0.499,0.763],[0.499,0.742],
-                [0.516,0.721],[0.513,0.701],[0.460,0.720],
-                [0.420,0.750],[0.396,0.815],[0.403,0.826],
-                [0.446,0.826],[0.440,0.815],[0.460,0.805],
-                [0.439,0.805],[0.392,0.794],[0.389,0.784],
-                [0.369,0.700],[0.369,0.596],[0.400,0.590],
-                [0.412,0.534],[0.435,0.523],[0.433,0.461],
-                [0.369,0.451],[0.400,0.430],[0.443,0.440],
-                [0.459,0.388],[0.416,0.357],[0.382,0.346],
-                [0.371,0.326],[0.382,0.284]
-            ]
-        },
-        {
-            name: 'אסיה', nameEn: 'Asia',
-            bounds: { x: 0.497, y: 0.039, width: 0.482, height: 0.611 },
-            outline: [
-                [0.497,0.039],[0.600,0.039],[0.700,0.039],[0.850,0.039],[0.966,0.039],
-                [0.976,0.060],[0.974,0.122],[0.851,0.133],
-                [0.974,0.143],[0.977,0.250],[0.979,0.268],
-                [0.974,0.289],[0.977,0.310],[0.977,0.341],
-                [0.855,0.352],[0.847,0.362],[0.923,0.372],
-                [0.912,0.383],[0.929,0.424],[0.977,0.435],
-                [0.977,0.466],[0.909,0.477],[0.909,0.497],
-                [0.977,0.508],[0.977,0.539],[0.900,0.549],
-                [0.810,0.560],[0.787,0.570],[0.979,0.581],
-                [0.976,0.612],[0.898,0.622],[0.854,0.643],
-                [0.700,0.643],[0.600,0.643],[0.510,0.643],
-                [0.497,0.550],[0.497,0.450],[0.497,0.393],
-                [0.510,0.383],[0.497,0.372],[0.503,0.352],
-                [0.497,0.341],[0.497,0.250],[0.497,0.216],
-                [0.514,0.185],[0.504,0.164],[0.572,0.143],
-                [0.521,0.070],[0.608,0.060]
-            ]
-        },
-        {
-            name: 'אוסטרליה', nameEn: 'Australia',
-            bounds: { x: 0.746, y: 0.560, width: 0.225, height: 0.298 },
-            outline: [
-                [0.780,0.570],[0.810,0.560],[0.850,0.570],
-                [0.878,0.602],[0.898,0.622],[0.854,0.643],
-                [0.820,0.643],[0.780,0.660],[0.776,0.695],
-                [0.780,0.730],[0.780,0.758],[0.810,0.770],
-                [0.844,0.768],[0.858,0.810],[0.885,0.820],
-                [0.915,0.820],[0.918,0.831],[0.949,0.852],
-                [0.940,0.852],[0.920,0.840],[0.945,0.779],
-                [0.916,0.758],[0.916,0.727],[0.878,0.716],
-                [0.876,0.706],[0.916,0.695],[0.943,0.674],
-                [0.949,0.664],[0.910,0.660],[0.870,0.660],
-                [0.810,0.640],[0.770,0.625],[0.760,0.600],
-                [0.753,0.580],[0.746,0.560]
-            ]
-        },
-        {
-            name: 'אנטארקטיקה', nameEn: 'Antarctica',
-            bounds: { x: 0.011, y: 0.898, width: 0.978, height: 0.090 },
-            outline: [
-                [0.011,0.898],[0.200,0.895],[0.400,0.898],
-                [0.600,0.895],[0.800,0.898],[0.988,0.898],
-                [0.988,0.983],[0.011,0.983]
-            ]
-        }
+        { name: 'צפון אמריקה', nameEn: 'North America', bounds: { x: 0.011, y: 0.026, width: 0.358, height: 0.520 } },
+        { name: 'דרום אמריקה', nameEn: 'South America', bounds: { x: 0.107, y: 0.443, width: 0.191, height: 0.492 } },
+        { name: 'אירופה', nameEn: 'Europe', bounds: { x: 0.369, y: 0.052, width: 0.184, height: 0.311 } },
+        { name: 'אפריקה', nameEn: 'Africa', bounds: { x: 0.369, y: 0.273, width: 0.234, height: 0.559 } },
+        { name: 'אסיה', nameEn: 'Asia', bounds: { x: 0.497, y: 0.039, width: 0.482, height: 0.611 } },
+        { name: 'אוסטרליה', nameEn: 'Australia', bounds: { x: 0.746, y: 0.560, width: 0.225, height: 0.298 } },
+        { name: 'אנטארקטיקה', nameEn: 'Antarctica', bounds: { x: 0.011, y: 0.898, width: 0.978, height: 0.090 } }
     ],
     countries: [
-        {
-            name: 'ברזיל', continent: 'דרום אמריקה',
-            bounds: { x: 0.170, y: 0.470, width: 0.120, height: 0.230 },
-            outline: [
-                [0.200,0.470],[0.240,0.465],[0.275,0.470],[0.295,0.490],
-                [0.297,0.520],[0.290,0.560],[0.280,0.600],[0.270,0.630],
-                [0.262,0.650],[0.250,0.670],[0.235,0.690],[0.220,0.700],
-                [0.200,0.700],[0.185,0.690],[0.175,0.670],[0.170,0.640],
-                [0.172,0.600],[0.175,0.560],[0.180,0.520],[0.185,0.490]
-            ]
-        },
-        {
-            name: 'מצרים', continent: 'אפריקה',
-            bounds: { x: 0.480, y: 0.310, width: 0.060, height: 0.090 },
-            outline: [
-                [0.485,0.310],[0.530,0.310],[0.535,0.320],
-                [0.535,0.370],[0.520,0.400],[0.500,0.400],
-                [0.485,0.390],[0.480,0.360],[0.480,0.330]
-            ]
-        },
-        {
-            name: 'הודו', continent: 'אסיה',
-            bounds: { x: 0.580, y: 0.360, width: 0.090, height: 0.200 },
-            outline: [
-                [0.580,0.370],[0.610,0.360],[0.650,0.370],[0.660,0.390],
-                [0.655,0.420],[0.640,0.450],[0.625,0.480],[0.610,0.510],
-                [0.600,0.540],[0.590,0.530],[0.580,0.500],[0.575,0.460],
-                [0.572,0.430],[0.575,0.400]
-            ]
-        },
-        {
-            name: 'סין', continent: 'אסיה',
-            bounds: { x: 0.740, y: 0.200, width: 0.160, height: 0.200 },
-            outline: [
-                [0.740,0.210],[0.780,0.200],[0.830,0.200],[0.870,0.210],
-                [0.890,0.230],[0.895,0.260],[0.890,0.300],[0.870,0.340],
-                [0.850,0.370],[0.820,0.390],[0.790,0.400],[0.760,0.390],
-                [0.740,0.370],[0.730,0.340],[0.728,0.300],[0.730,0.260],
-                [0.735,0.230]
-            ]
-        },
-        {
-            name: 'ארה"ב', continent: 'צפון אמריקה',
-            bounds: { x: 0.040, y: 0.250, width: 0.220, height: 0.200 },
-            outline: [
-                [0.040,0.260],[0.120,0.255],[0.200,0.260],[0.260,0.270],
-                [0.270,0.300],[0.265,0.340],[0.255,0.370],[0.248,0.400],
-                [0.230,0.420],[0.210,0.440],[0.180,0.440],[0.140,0.430],
-                [0.100,0.420],[0.060,0.410],[0.040,0.400],
-                [0.035,0.360],[0.035,0.310]
-            ]
-        },
-        {
-            name: 'רוסיה', continent: 'אסיה',
-            bounds: { x: 0.500, y: 0.050, width: 0.470, height: 0.200 },
-            outline: [
-                [0.500,0.055],[0.560,0.050],[0.650,0.045],[0.750,0.040],
-                [0.850,0.040],[0.960,0.045],[0.975,0.060],[0.975,0.100],
-                [0.975,0.140],[0.970,0.180],[0.960,0.210],[0.920,0.220],
-                [0.870,0.215],[0.820,0.210],[0.760,0.210],[0.700,0.210],
-                [0.640,0.200],[0.580,0.190],[0.530,0.185],[0.500,0.180],
-                [0.500,0.140],[0.505,0.100]
-            ]
-        },
-        {
-            name: 'אוסטרליה', continent: 'אוסטרליה',
-            bounds: { x: 0.746, y: 0.560, width: 0.225, height: 0.298 },
-            outline: [
-                [0.780,0.570],[0.810,0.560],[0.850,0.570],
-                [0.878,0.602],[0.898,0.622],[0.854,0.643],
-                [0.820,0.643],[0.780,0.660],[0.776,0.695],
-                [0.780,0.730],[0.780,0.758],[0.810,0.770],
-                [0.844,0.768],[0.858,0.810],[0.885,0.820],
-                [0.915,0.820],[0.918,0.831],[0.949,0.852],
-                [0.940,0.852],[0.920,0.840],[0.945,0.779],
-                [0.916,0.758],[0.916,0.727],[0.878,0.716],
-                [0.876,0.706],[0.916,0.695],[0.943,0.674],
-                [0.949,0.664],[0.910,0.660],[0.870,0.660],
-                [0.810,0.640],[0.770,0.625],[0.760,0.600],
-                [0.753,0.580],[0.746,0.560]
-            ]
-        },
-        {
-            name: 'קנדה', continent: 'צפון אמריקה',
-            bounds: { x: 0.011, y: 0.026, width: 0.280, height: 0.230 },
-            outline: [
-                [0.011,0.030],[0.080,0.026],[0.160,0.026],[0.240,0.026],
-                [0.300,0.030],[0.350,0.035],[0.369,0.047],
-                [0.369,0.120],[0.369,0.200],[0.365,0.230],
-                [0.340,0.240],[0.300,0.255],[0.260,0.265],
-                [0.200,0.260],[0.140,0.255],[0.080,0.260],
-                [0.040,0.260],[0.020,0.250],[0.011,0.200],
-                [0.011,0.120]
-            ]
-        },
-        {
-            name: 'ארגנטינה', continent: 'דרום אמריקה',
-            bounds: { x: 0.150, y: 0.700, width: 0.080, height: 0.230 },
-            outline: [
-                [0.170,0.700],[0.200,0.700],[0.220,0.710],
-                [0.230,0.740],[0.228,0.770],[0.220,0.800],
-                [0.210,0.830],[0.200,0.860],[0.190,0.890],
-                [0.180,0.920],[0.165,0.925],[0.150,0.910],
-                [0.140,0.880],[0.135,0.850],[0.138,0.820],
-                [0.142,0.790],[0.148,0.760],[0.155,0.730]
-            ]
-        },
-        {
-            name: 'יפן', continent: 'אסיה',
-            bounds: { x: 0.860, y: 0.250, width: 0.060, height: 0.120 },
-            outline: [
-                [0.880,0.255],[0.895,0.260],[0.900,0.280],
-                [0.895,0.300],[0.890,0.320],[0.885,0.340],
-                [0.880,0.360],[0.870,0.365],[0.865,0.350],
-                [0.862,0.320],[0.865,0.290],[0.870,0.265]
-            ]
-        },
-        {
-            name: 'צרפת', continent: 'אירופה',
-            bounds: { x: 0.460, y: 0.270, width: 0.050, height: 0.070 },
-            outline: [
-                [0.465,0.275],[0.490,0.270],[0.505,0.280],
-                [0.510,0.300],[0.505,0.325],[0.495,0.340],
-                [0.480,0.340],[0.465,0.335],[0.458,0.315],
-                [0.460,0.295]
-            ]
-        },
-        {
-            name: 'בריטניה', continent: 'אירופה',
-            bounds: { x: 0.445, y: 0.230, width: 0.040, height: 0.070 },
-            outline: [
-                [0.455,0.240],[0.470,0.235],[0.480,0.245],
-                [0.478,0.265],[0.475,0.285],[0.468,0.298],
-                [0.458,0.295],[0.450,0.280],[0.448,0.260]
-            ]
-        },
-        {
-            name: 'גרמניה', continent: 'אירופה',
-            bounds: { x: 0.495, y: 0.250, width: 0.040, height: 0.060 },
-            outline: [
-                [0.498,0.255],[0.520,0.250],[0.535,0.260],
-                [0.535,0.285],[0.530,0.305],[0.515,0.310],
-                [0.500,0.305],[0.495,0.285]
-            ]
-        },
-        {
-            name: 'ספרד', continent: 'אירופה',
-            bounds: { x: 0.430, y: 0.310, width: 0.050, height: 0.050 },
-            outline: [
-                [0.435,0.315],[0.460,0.310],[0.478,0.315],
-                [0.478,0.340],[0.470,0.355],[0.450,0.360],
-                [0.435,0.350],[0.430,0.335]
-            ]
-        },
-        {
-            name: 'איטליה', continent: 'אירופה',
-            bounds: { x: 0.500, y: 0.300, width: 0.035, height: 0.070 },
-            outline: [
-                [0.505,0.300],[0.520,0.300],[0.528,0.310],
-                [0.530,0.330],[0.525,0.345],[0.520,0.360],
-                [0.512,0.370],[0.505,0.365],[0.500,0.345],
-                [0.500,0.320]
-            ]
-        },
-        {
-            name: 'מקסיקו', continent: 'צפון אמריקה',
-            bounds: { x: 0.070, y: 0.400, width: 0.120, height: 0.080 },
-            outline: [
-                [0.075,0.400],[0.120,0.405],[0.160,0.410],[0.190,0.420],
-                [0.185,0.445],[0.175,0.465],[0.160,0.475],[0.140,0.475],
-                [0.120,0.470],[0.100,0.460],[0.080,0.450],[0.070,0.430]
-            ]
-        },
-        {
-            name: 'דרום אפריקה', continent: 'אפריקה',
-            bounds: { x: 0.400, y: 0.770, width: 0.080, height: 0.060 },
-            outline: [
-                [0.410,0.775],[0.440,0.770],[0.465,0.775],
-                [0.475,0.795],[0.470,0.815],[0.455,0.828],
-                [0.435,0.830],[0.415,0.825],[0.405,0.810],
-                [0.400,0.790]
-            ]
-        },
-        {
-            name: 'ערב הסעודית', continent: 'אסיה',
-            bounds: { x: 0.540, y: 0.370, width: 0.060, height: 0.080 },
-            outline: [
-                [0.545,0.375],[0.570,0.370],[0.595,0.380],
-                [0.600,0.400],[0.595,0.430],[0.580,0.450],
-                [0.560,0.450],[0.545,0.440],[0.538,0.420],
-                [0.538,0.395]
-            ]
-        },
-        {
-            name: 'טורקיה', continent: 'אסיה',
-            bounds: { x: 0.535, y: 0.280, width: 0.055, height: 0.040 },
-            outline: [
-                [0.540,0.285],[0.560,0.280],[0.580,0.283],
-                [0.590,0.290],[0.590,0.308],[0.585,0.318],
-                [0.570,0.320],[0.550,0.318],[0.538,0.310],
-                [0.535,0.298]
-            ]
-        },
-        {
-            name: 'קולומביה', continent: 'דרום אמריקה',
-            bounds: { x: 0.165, y: 0.440, width: 0.060, height: 0.060 },
-            outline: [
-                [0.170,0.445],[0.195,0.440],[0.218,0.445],
-                [0.225,0.465],[0.220,0.490],[0.205,0.500],
-                [0.185,0.500],[0.172,0.490],[0.165,0.470]
-            ]
-        }
+        { name: 'ברזיל', continent: 'דרום אמריקה', bounds: { x: 0.170, y: 0.470, width: 0.130, height: 0.240 } },
+        { name: 'מצרים', continent: 'אפריקה', bounds: { x: 0.480, y: 0.310, width: 0.065, height: 0.100 } },
+        { name: 'הודו', continent: 'אסיה', bounds: { x: 0.570, y: 0.350, width: 0.100, height: 0.210 } },
+        { name: 'סין', continent: 'אסיה', bounds: { x: 0.730, y: 0.195, width: 0.170, height: 0.210 } },
+        { name: 'ארה"ב', continent: 'צפון אמריקה', bounds: { x: 0.035, y: 0.250, width: 0.235, height: 0.200 } },
+        { name: 'רוסיה', continent: 'אסיה', bounds: { x: 0.497, y: 0.039, width: 0.482, height: 0.200 } },
+        { name: 'אוסטרליה', continent: 'אוסטרליה', bounds: { x: 0.746, y: 0.560, width: 0.225, height: 0.298 } },
+        { name: 'קנדה', continent: 'צפון אמריקה', bounds: { x: 0.011, y: 0.026, width: 0.360, height: 0.235 } },
+        { name: 'ארגנטינה', continent: 'דרום אמריקה', bounds: { x: 0.140, y: 0.700, width: 0.100, height: 0.240 } },
+        { name: 'יפן', continent: 'אסיה', bounds: { x: 0.855, y: 0.245, width: 0.065, height: 0.130 } },
+        { name: 'צרפת', continent: 'אירופה', bounds: { x: 0.455, y: 0.265, width: 0.060, height: 0.080 } },
+        { name: 'בריטניה', continent: 'אירופה', bounds: { x: 0.440, y: 0.225, width: 0.045, height: 0.080 } },
+        { name: 'גרמניה', continent: 'אירופה', bounds: { x: 0.495, y: 0.245, width: 0.045, height: 0.065 } },
+        { name: 'ספרד', continent: 'אירופה', bounds: { x: 0.425, y: 0.305, width: 0.060, height: 0.060 } },
+        { name: 'איטליה', continent: 'אירופה', bounds: { x: 0.498, y: 0.295, width: 0.040, height: 0.080 } },
+        { name: 'מקסיקו', continent: 'צפון אמריקה', bounds: { x: 0.065, y: 0.395, width: 0.130, height: 0.090 } },
+        { name: 'דרום אפריקה', continent: 'אפריקה', bounds: { x: 0.395, y: 0.765, width: 0.090, height: 0.070 } },
+        { name: 'ערב הסעודית', continent: 'אסיה', bounds: { x: 0.535, y: 0.365, width: 0.070, height: 0.090 } },
+        { name: 'טורקיה', continent: 'אסיה', bounds: { x: 0.530, y: 0.275, width: 0.065, height: 0.050 } },
+        { name: 'קולומביה', continent: 'דרום אמריקה', bounds: { x: 0.160, y: 0.435, width: 0.070, height: 0.070 } }
     ],
     cities: [
         // Original cities - verified positions
@@ -1605,11 +1303,17 @@ function startQuizStage(type) {
     updateLivesDisplay();
     updateScoreDisplay();
 
-    // Load map image for quiz
+    // Load map image for quiz - always use the actual PNG for pixel-accurate highlighting
     const mapImg = document.getElementById('quizMapImage');
-    mapImg.src = puzzleImage ? puzzleImage.src : MAP_IMAGE_URL;
+    _mapPixelCache = null; // reset pixel cache for fresh image
+    mapImg.src = 'world_map.png';
     mapImg.onload = () => {
         showQuizQuestion(type);
+    };
+    mapImg.onerror = () => {
+        // Fallback to puzzle image if world_map.png not available
+        mapImg.src = puzzleImage ? puzzleImage.src : MAP_IMAGE_URL;
+        mapImg.onload = () => showQuizQuestion(type);
     };
 }
 
@@ -1693,6 +1397,34 @@ function positionOverlayOnImage() {
     overlay.style.bottom = 'auto';
 }
 
+// Pixel-based land detection (same logic as server-side analyze_map.js)
+function isLandPixel(r, g, b) {
+    const isGreen = g > 80 && g > b && g > r * 0.7 && b < 150;
+    const isTan = r > 150 && g > 120 && b < 120;
+    const isIce = r > 200 && g > 200 && b > 200;
+    const isDarkGreen = g > 60 && r < 120 && b < 100;
+    return isGreen || isTan || isIce || isDarkGreen;
+}
+
+// Cache for the map pixel data (read once, reuse for all questions)
+let _mapPixelCache = null;
+
+function getMapPixelData(mapImg) {
+    if (_mapPixelCache) return _mapPixelCache;
+
+    const offscreen = document.createElement('canvas');
+    offscreen.width = mapImg.naturalWidth;
+    offscreen.height = mapImg.naturalHeight;
+    const ctx = offscreen.getContext('2d');
+    ctx.drawImage(mapImg, 0, 0);
+    _mapPixelCache = {
+        imageData: ctx.getImageData(0, 0, offscreen.width, offscreen.height),
+        width: offscreen.width,
+        height: offscreen.height
+    };
+    return _mapPixelCache;
+}
+
 function highlightMapArea(item, type) {
     const mapImg = document.getElementById('quizMapImage');
     const overlay = document.getElementById('highlightOverlay');
@@ -1712,13 +1444,13 @@ function highlightMapArea(item, type) {
         const style = document.createElement('style');
         style.id = 'flashAnimation';
         style.textContent = `
-            @keyframes flashHighlight {
-                0%, 100% { opacity: 0.3; }
-                50% { opacity: 0.7; }
-            }
             @keyframes pulseMarker {
                 0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 15px rgba(255, 0, 0, 0.8), 0 0 30px rgba(255, 0, 0, 0.4); }
                 50% { transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 25px rgba(255, 0, 0, 1), 0 0 50px rgba(255, 0, 0, 0.6); }
+            }
+            @keyframes landFlash {
+                0%, 100% { opacity: 0.25; }
+                50% { opacity: 0.65; }
             }
         `;
         document.head.appendChild(style);
@@ -1763,82 +1495,79 @@ function highlightMapArea(item, type) {
             z-index: 9;
         `;
         overlay.appendChild(ring);
-    } else if (item.outline && item.outline.length > 2) {
-        // Use SVG polygon for accurate shape highlighting
-        const svgNS = 'http://www.w3.org/2000/svg';
-        const svg = document.createElementNS(svgNS, 'svg');
-        svg.setAttribute('viewBox', '0 0 1 1');
-        svg.setAttribute('preserveAspectRatio', 'none');
-        svg.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: visible;
-        `;
-
-        // Create the polygon
-        const polygon = document.createElementNS(svgNS, 'polygon');
-        const pointsStr = item.outline.map(([x, y]) => `${x},${y}`).join(' ');
-        polygon.setAttribute('points', pointsStr);
-        polygon.setAttribute('fill', 'rgba(255, 50, 50, 0.35)');
-        polygon.setAttribute('stroke', '#ff2222');
-        polygon.setAttribute('stroke-width', '0.003');
-        polygon.setAttribute('stroke-linejoin', 'round');
-
-        // Add pulsing animation
-        const animate = document.createElementNS(svgNS, 'animate');
-        animate.setAttribute('attributeName', 'fill-opacity');
-        animate.setAttribute('values', '0.2;0.5;0.2');
-        animate.setAttribute('dur', '1s');
-        animate.setAttribute('repeatCount', 'indefinite');
-        polygon.appendChild(animate);
-
-        const animateStroke = document.createElementNS(svgNS, 'animate');
-        animateStroke.setAttribute('attributeName', 'stroke-opacity');
-        animateStroke.setAttribute('values', '0.5;1;0.5');
-        animateStroke.setAttribute('dur', '1s');
-        animateStroke.setAttribute('repeatCount', 'indefinite');
-        polygon.appendChild(animateStroke);
-
-        svg.appendChild(polygon);
-
-        // Add a second, slightly larger polygon for glow effect
-        const glow = document.createElementNS(svgNS, 'polygon');
-        glow.setAttribute('points', pointsStr);
-        glow.setAttribute('fill', 'none');
-        glow.setAttribute('stroke', 'rgba(255, 100, 100, 0.4)');
-        glow.setAttribute('stroke-width', '0.006');
-        glow.setAttribute('stroke-linejoin', 'round');
-        const glowAnimate = document.createElementNS(svgNS, 'animate');
-        glowAnimate.setAttribute('attributeName', 'stroke-opacity');
-        glowAnimate.setAttribute('values', '0.2;0.6;0.2');
-        glowAnimate.setAttribute('dur', '1s');
-        glowAnimate.setAttribute('repeatCount', 'indefinite');
-        glow.appendChild(glowAnimate);
-        svg.appendChild(glow);
-
-        overlay.appendChild(svg);
     } else {
-        // Fallback: rectangular highlight (for items without outline)
-        const highlightDiv = document.createElement('div');
-        highlightDiv.className = 'area-highlight';
-        highlightDiv.style.cssText = `
-            position: absolute;
-            left: ${item.bounds.x * 100}%;
-            top: ${item.bounds.y * 100}%;
-            width: ${item.bounds.width * 100}%;
-            height: ${item.bounds.height * 100}%;
-            background: rgba(255, 0, 0, 0.3);
-            border: 3px solid #ff0000;
-            border-radius: 10px;
-            animation: flashHighlight 0.8s ease-in-out infinite;
-            pointer-events: none;
-            box-sizing: border-box;
-        `;
-        overlay.appendChild(highlightDiv);
+        // Pixel-based highlighting: read actual map pixels and color only land
+        try {
+            const pixelData = getMapPixelData(mapImg);
+            const W = pixelData.width;
+            const H = pixelData.height;
+            const srcData = pixelData.imageData.data;
+
+            // Bounds in pixel coordinates
+            const bx = Math.floor(item.bounds.x * W);
+            const by = Math.floor(item.bounds.y * H);
+            const bw = Math.ceil(item.bounds.width * W);
+            const bh = Math.ceil(item.bounds.height * H);
+
+            // Create a canvas for the highlight
+            const canvas = document.createElement('canvas');
+            canvas.width = W;
+            canvas.height = H;
+            const ctx = canvas.getContext('2d');
+
+            // Create highlight image data - only color land pixels within bounds
+            const highlightImageData = ctx.createImageData(bw, bh);
+            const hd = highlightImageData.data;
+
+            for (let y = 0; y < bh; y++) {
+                for (let x = 0; x < bw; x++) {
+                    const srcIdx = ((by + y) * W + (bx + x)) * 4;
+                    const r = srcData[srcIdx];
+                    const g = srcData[srcIdx + 1];
+                    const b = srcData[srcIdx + 2];
+
+                    if (isLandPixel(r, g, b)) {
+                        const dstIdx = (y * bw + x) * 4;
+                        hd[dstIdx] = 255;      // R
+                        hd[dstIdx + 1] = 60;   // G
+                        hd[dstIdx + 2] = 60;   // B
+                        hd[dstIdx + 3] = 180;  // A
+                    }
+                }
+            }
+
+            ctx.putImageData(highlightImageData, bx, by);
+
+            // Style the canvas to sit on top of the map
+            canvas.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                animation: landFlash 1s ease-in-out infinite;
+            `;
+
+            overlay.appendChild(canvas);
+        } catch (e) {
+            // Fallback if canvas pixel reading fails (e.g., CORS)
+            console.warn('Pixel highlighting failed, using fallback:', e);
+            const highlightDiv = document.createElement('div');
+            highlightDiv.style.cssText = `
+                position: absolute;
+                left: ${item.bounds.x * 100}%;
+                top: ${item.bounds.y * 100}%;
+                width: ${item.bounds.width * 100}%;
+                height: ${item.bounds.height * 100}%;
+                background: rgba(255, 0, 0, 0.3);
+                border: 3px solid #ff0000;
+                border-radius: 10px;
+                animation: landFlash 1s ease-in-out infinite;
+                pointer-events: none;
+            `;
+            overlay.appendChild(highlightDiv);
+        }
     }
 }
 
