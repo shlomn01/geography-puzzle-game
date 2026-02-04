@@ -550,6 +550,8 @@ function backToMenu() {
     GameState.isPaused = false;
     showScreen('mainMenu');
     document.getElementById('highScoreDisplay').textContent = GameState.highScore;
+    const mc = document.getElementById('svgMapContainer');
+    if (mc) mc.classList.remove('stage-countries');
 }
 
 function pauseGame() {
@@ -1287,19 +1289,133 @@ function startQuizStage(type) {
     updateLivesDisplay();
     updateScoreDisplay();
 
+    // Toggle stage-countries class for different visual style
+    const mapContainer = document.getElementById('svgMapContainer');
+    if (type === 'countries') {
+        mapContainer.classList.add('stage-countries');
+    } else {
+        mapContainer.classList.remove('stage-countries');
+    }
+
     // Load SVG map for quiz
     loadSvgMap(() => {
+        const svg = mapContainer.querySelector('svg');
+        if (type === 'countries' && svg) {
+            addCountryLabels(svg);
+        } else if (svg) {
+            removeCountryLabels(svg);
+        }
         showQuizQuestion(type);
     });
+}
+
+function addCountryLabels(svg) {
+    removeCountryLabels(svg);
+    GeoData.countries.forEach(country => {
+        const el = svg.getElementById(country.svgId);
+        if (!el) return;
+        const bbox = el.getBBox();
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', bbox.x + bbox.width / 2);
+        label.setAttribute('y', bbox.y + bbox.height / 2);
+        label.setAttribute('text-anchor', 'middle');
+        label.setAttribute('dominant-baseline', 'central');
+        label.setAttribute('class', 'country-label');
+        label.setAttribute('font-size', Math.max(5, Math.min(11, bbox.width / 6)));
+        label.textContent = country.name;
+        svg.appendChild(label);
+    });
+}
+
+function removeCountryLabels(svg) {
+    if (!svg) return;
+    svg.querySelectorAll('.country-label').forEach(el => el.remove());
 }
 
 // SVG map loading
 let svgMapLoaded = false;
 let svgMapData = null;
 
+// Zoom system
+const FULL_VIEWBOX = { x: 0, y: 0, w: 1200, h: 700 };
+const ZOOM_THRESHOLD = 0.08;
+const ZOOM_PADDING = 80;
+const ZOOM_DURATION = 1200;
+let currentViewBox = { ...FULL_VIEWBOX };
+let zoomAnimationId = null;
+
+function animateViewBox(svg, from, to, duration) {
+    return new Promise(resolve => {
+        if (zoomAnimationId) cancelAnimationFrame(zoomAnimationId);
+        const startTime = performance.now();
+
+        function step(now) {
+            const elapsed = now - startTime;
+            const t = Math.min(elapsed / duration, 1);
+            const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+            const x = from.x + (to.x - from.x) * ease;
+            const y = from.y + (to.y - from.y) * ease;
+            const w = from.w + (to.w - from.w) * ease;
+            const h = from.h + (to.h - from.h) * ease;
+
+            svg.setAttribute('viewBox', `${x.toFixed(1)} ${y.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`);
+            currentViewBox = { x, y, w, h };
+
+            if (t < 1) {
+                zoomAnimationId = requestAnimationFrame(step);
+            } else {
+                zoomAnimationId = null;
+                resolve();
+            }
+        }
+        zoomAnimationId = requestAnimationFrame(step);
+    });
+}
+
+function zoomToElement(element, svg) {
+    const bbox = element.getBBox();
+    const mapArea = FULL_VIEWBOX.w * FULL_VIEWBOX.h;
+    const elArea = bbox.width * bbox.height;
+
+    if (elArea / mapArea < ZOOM_THRESHOLD) {
+        let targetW = bbox.width + ZOOM_PADDING * 2;
+        let targetH = bbox.height + ZOOM_PADDING * 2;
+
+        targetW = Math.max(targetW, 200);
+        targetH = Math.max(targetH, 116.67);
+
+        const targetAspect = 12 / 7;
+        if (targetW / targetH > targetAspect) {
+            targetH = targetW / targetAspect;
+        } else {
+            targetW = targetH * targetAspect;
+        }
+
+        let targetX = bbox.x + bbox.width / 2 - targetW / 2;
+        let targetY = bbox.y + bbox.height / 2 - targetH / 2;
+
+        targetX = Math.max(0, Math.min(targetX, 1200 - targetW));
+        targetY = Math.max(0, Math.min(targetY, 700 - targetH));
+
+        return animateViewBox(svg, currentViewBox, { x: targetX, y: targetY, w: targetW, h: targetH }, ZOOM_DURATION);
+    }
+    return Promise.resolve();
+}
+
+function zoomOut(svg) {
+    if (currentViewBox.w >= 1190 && currentViewBox.h >= 690) {
+        return Promise.resolve();
+    }
+    return animateViewBox(svg, currentViewBox, FULL_VIEWBOX, ZOOM_DURATION * 0.7);
+}
+
 function loadSvgMap(callback) {
     const container = document.getElementById('svgMapContainer');
     if (svgMapLoaded && container.querySelector('svg')) {
+        const svg = container.querySelector('svg');
+        svg.setAttribute('viewBox', '0 0 1200 700');
+        currentViewBox = { ...FULL_VIEWBOX };
         callback();
         return;
     }
@@ -1309,6 +1425,11 @@ function loadSvgMap(callback) {
         .then(svgText => {
             container.innerHTML = svgText;
             svgMapLoaded = true;
+            const svg = container.querySelector('svg');
+            if (svg) {
+                svg.setAttribute('viewBox', '0 0 1200 700');
+                currentViewBox = { ...FULL_VIEWBOX };
+            }
             callback();
         })
         .catch(err => {
@@ -1374,15 +1495,18 @@ function generateOptions(correct, type) {
 
 function clearHighlights() {
     const container = document.getElementById('svgMapContainer');
-    if (!container) return;
-    // Remove all highlight classes
+    if (!container) return Promise.resolve();
+    const svg = container.querySelector('svg');
+
     container.querySelectorAll('.svg-highlight').forEach(el => {
         el.classList.remove('svg-highlight');
     });
-    // Remove city highlight elements
     container.querySelectorAll('.svg-city-dot, .svg-city-ring').forEach(el => {
         el.remove();
     });
+
+    if (svg) return zoomOut(svg);
+    return Promise.resolve();
 }
 
 function highlightMapArea(item, type) {
@@ -1393,16 +1517,21 @@ function highlightMapArea(item, type) {
         return;
     }
 
-    clearHighlights();
+    // Reset viewBox first (no animation), then highlight and zoom
+    if (zoomAnimationId) cancelAnimationFrame(zoomAnimationId);
+    svg.setAttribute('viewBox', '0 0 1200 700');
+    currentViewBox = { ...FULL_VIEWBOX };
+
+    // Clear previous highlights without zoom-out animation
+    container.querySelectorAll('.svg-highlight').forEach(el => el.classList.remove('svg-highlight'));
+    container.querySelectorAll('.svg-city-dot, .svg-city-ring').forEach(el => el.remove());
 
     if (type === 'cities') {
-        // Find the city circle element and add a pulsing dot + ring
         const cityEl = svg.getElementById(item.svgId);
         if (cityEl) {
             const cx = parseFloat(cityEl.getAttribute('cx'));
             const cy = parseFloat(cityEl.getAttribute('cy'));
 
-            // Create pulsing dot
             const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
             dot.setAttribute('cx', cx);
             dot.setAttribute('cy', cy);
@@ -1410,16 +1539,16 @@ function highlightMapArea(item, type) {
             dot.classList.add('svg-city-dot');
             svg.appendChild(dot);
 
-            // Create pulsing ring
             const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
             ring.setAttribute('cx', cx);
             ring.setAttribute('cy', cy);
             ring.setAttribute('r', '12');
             ring.classList.add('svg-city-ring');
             svg.appendChild(ring);
+
+            zoomToElement(cityEl, svg);
         }
     } else if (type === 'continents') {
-        // Highlight all paths in the continent group
         const group = svg.getElementById(item.svgId);
         if (group) {
             group.querySelectorAll('.country-path').forEach(path => {
@@ -1427,10 +1556,10 @@ function highlightMapArea(item, type) {
             });
         }
     } else if (type === 'countries') {
-        // Highlight the specific country path
         const el = svg.getElementById(item.svgId);
         if (el) {
             el.classList.add('svg-highlight');
+            zoomToElement(el, svg);
         }
     }
 }
@@ -1467,10 +1596,10 @@ function checkAnswer(selected, correct, type) {
         }
     }
 
-    // Next question
-    setTimeout(() => {
+    // Next question - zoom out then show next
+    setTimeout(async () => {
         currentQuizIndex++;
-        clearHighlights();
+        await clearHighlights();
         showQuizQuestion(type);
     }, 1500);
 }
@@ -1504,6 +1633,8 @@ function completeQuizStage(type) {
 function showResults() {
     stopTimer();
     stopBackgroundMusic();
+    const mc = document.getElementById('svgMapContainer');
+    if (mc) mc.classList.remove('stage-countries');
 
     showScreen('resultsScreen');
 

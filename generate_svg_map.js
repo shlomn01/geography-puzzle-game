@@ -92,7 +92,7 @@ function getCountriesInContinent(continentName) {
 }
 
 // Generate SVG
-let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SVG_WIDTH} ${SVG_HEIGHT}" id="worldMapSVG">
+let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SVG_WIDTH} ${SVG_HEIGHT}" preserveAspectRatio="xMidYMid meet" id="worldMapSVG">
   <defs>
     <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" style="stop-color:#1a5276"/>

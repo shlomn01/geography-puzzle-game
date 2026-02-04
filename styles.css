@@ -646,9 +646,9 @@ html, body {
 
 .svg-map-container svg {
     width: 100%;
-    height: 100%;
-    max-width: 100%;
+    height: auto;
     max-height: 100%;
+    display: block;
 }
 
 /* SVG highlight animations */
@@ -685,6 +685,92 @@ html, body {
     fill: none;
     stroke: #ff4444;
     animation: svgCityRingPulse 1s ease-in-out infinite;
+}
+
+/* ============================================
+   Stage 3 (Countries) - Distinct Visual Theme
+   ============================================ */
+
+.stage-countries {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Animated ocean wave effect */
+.stage-countries::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -50%;
+    width: 200%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 60px,
+        rgba(255,255,255,0.03) 60px,
+        rgba(255,255,255,0.03) 62px
+    );
+    animation: oceanWaves 8s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.stage-countries svg {
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes oceanWaves {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(60px); }
+}
+
+/* New color palette: warm earthy/pastel tones */
+.stage-countries [data-continent="north-america"] .country-path {
+    fill: #e8a87c !important;
+    stroke: #c68c5e !important;
+}
+.stage-countries [data-continent="south-america"] .country-path {
+    fill: #85cdca !important;
+    stroke: #5fb3b0 !important;
+}
+.stage-countries [data-continent="europe"] .country-path {
+    fill: #d4a5a5 !important;
+    stroke: #b88888 !important;
+}
+.stage-countries [data-continent="africa"] .country-path {
+    fill: #f9d56e !important;
+    stroke: #d4b44e !important;
+}
+.stage-countries [data-continent="asia"] .country-path {
+    fill: #a8d8ea !important;
+    stroke: #7fb8cc !important;
+}
+.stage-countries [data-continent="australia"] .country-path {
+    fill: #f3a683 !important;
+    stroke: #d48a6a !important;
+}
+.stage-countries [data-continent="antarctica"] .country-path {
+    fill: #dfe6e9 !important;
+    stroke: #b2bec3 !important;
+}
+
+/* Enhanced highlight for countries stage */
+.stage-countries .svg-highlight {
+    fill: #ff6b6b !important;
+    stroke: #ff0000 !important;
+    stroke-width: 2.5 !important;
+    filter: drop-shadow(0 0 6px rgba(255, 0, 0, 0.6));
+}
+
+/* Country name labels */
+.country-label {
+    fill: #1a1a2e;
+    font-family: 'Heebo', sans-serif;
+    font-weight: 600;
+    pointer-events: none;
+    opacity: 0.7;
 }
 
 .quiz-question-area {
