@@ -636,35 +636,55 @@ html, body {
     object-fit: contain;
 }
 
-.highlight-overlay {
-    position: absolute;
-    pointer-events: none;
-    /* Dimensions and position are set dynamically by positionOverlayOnImage() */
-    overflow: visible;
+.svg-map-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.city-marker {
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: var(--danger-color);
-    border: 3px solid white;
-    box-shadow: 0 0 20px var(--danger-color);
-    display: none;
-    animation: pulse 1s ease-in-out infinite;
-    transform: translate(-50%, -50%);
+.svg-map-container svg {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
 }
 
-@keyframes pulse {
-    0%, 100% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-    }
-    50% {
-        transform: translate(-50%, -50%) scale(1.3);
-        opacity: 0.7;
-    }
+/* SVG highlight animations */
+@keyframes svgRegionFlash {
+    0%, 100% { fill-opacity: 0.4; }
+    50% { fill-opacity: 0.9; }
+}
+
+@keyframes svgCityPulse {
+    0%, 100% { r: 5; opacity: 1; }
+    50% { r: 9; opacity: 0.7; }
+}
+
+@keyframes svgCityRingPulse {
+    0%, 100% { r: 12; opacity: 0.8; stroke-width: 2; }
+    50% { r: 18; opacity: 0.4; stroke-width: 3; }
+}
+
+.svg-highlight {
+    fill: #ff2222 !important;
+    stroke: #ff0000 !important;
+    stroke-width: 2 !important;
+    animation: svgRegionFlash 1s ease-in-out infinite !important;
+}
+
+.svg-city-dot {
+    fill: #ff0000;
+    stroke: #ffffff;
+    stroke-width: 2;
+    animation: svgCityPulse 1s ease-in-out infinite;
+}
+
+.svg-city-ring {
+    fill: none;
+    stroke: #ff4444;
+    animation: svgCityRingPulse 1s ease-in-out infinite;
 }
 
 .quiz-question-area {

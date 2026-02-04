@@ -138,79 +138,63 @@ let audioContext = null;
 let sounds = {};
 
 // ============================================
-// Geography Data - Coordinates match the SVG map
+// Geography Data - SVG element IDs for highlighting
 // ============================================
-// Geography Data - Coordinates calibrated for the illustrated world map (1408x768)
-// IMPORTANT: Coordinates are normalized (0-1) relative to the CONTENT AREA
-// The map has a decorative wooden frame (~2% on each side)
-// Content area starts at approximately x=0.02, y=0.02 and ends at x=0.98, y=0.98
-//
-// Calibration based on visual analysis of world_map.png:
-// - Map uses Mercator-style projection
-// - Greenland is large white area at top center
-// - Compass rose is at bottom left
-// - Antarctica is white strip at very bottom
 const GeoData = {
-    // All coordinates are normalized (0-1) relative to the full image (1408x768)
-    // Highlighting is done via pixel analysis - detecting actual land pixels on the map
-    // bounds define the scan region for each continent/country
-
     continents: [
-        { name: 'צפון אמריקה', nameEn: 'North America', bounds: { x: 0.011, y: 0.026, width: 0.358, height: 0.520 } },
-        { name: 'דרום אמריקה', nameEn: 'South America', bounds: { x: 0.107, y: 0.443, width: 0.191, height: 0.492 } },
-        { name: 'אירופה', nameEn: 'Europe', bounds: { x: 0.369, y: 0.052, width: 0.184, height: 0.311 } },
-        { name: 'אפריקה', nameEn: 'Africa', bounds: { x: 0.369, y: 0.273, width: 0.234, height: 0.559 } },
-        { name: 'אסיה', nameEn: 'Asia', bounds: { x: 0.497, y: 0.039, width: 0.482, height: 0.611 } },
-        { name: 'אוסטרליה', nameEn: 'Australia', bounds: { x: 0.746, y: 0.560, width: 0.225, height: 0.298 } },
-        { name: 'אנטארקטיקה', nameEn: 'Antarctica', bounds: { x: 0.011, y: 0.898, width: 0.978, height: 0.090 } }
+        { name: 'צפון אמריקה', nameEn: 'North America', svgId: 'continent-north-america' },
+        { name: 'דרום אמריקה', nameEn: 'South America', svgId: 'continent-south-america' },
+        { name: 'אירופה', nameEn: 'Europe', svgId: 'continent-europe' },
+        { name: 'אפריקה', nameEn: 'Africa', svgId: 'continent-africa' },
+        { name: 'אסיה', nameEn: 'Asia', svgId: 'continent-asia' },
+        { name: 'אוסטרליה', nameEn: 'Australia', svgId: 'continent-australia' },
+        { name: 'אנטארקטיקה', nameEn: 'Antarctica', svgId: 'continent-antarctica' }
     ],
     countries: [
-        { name: 'ברזיל', continent: 'דרום אמריקה', bounds: { x: 0.170, y: 0.470, width: 0.130, height: 0.240 } },
-        { name: 'מצרים', continent: 'אפריקה', bounds: { x: 0.480, y: 0.310, width: 0.065, height: 0.100 } },
-        { name: 'הודו', continent: 'אסיה', bounds: { x: 0.570, y: 0.350, width: 0.100, height: 0.210 } },
-        { name: 'סין', continent: 'אסיה', bounds: { x: 0.730, y: 0.195, width: 0.170, height: 0.210 } },
-        { name: 'ארה"ב', continent: 'צפון אמריקה', bounds: { x: 0.035, y: 0.250, width: 0.235, height: 0.200 } },
-        { name: 'רוסיה', continent: 'אסיה', bounds: { x: 0.497, y: 0.039, width: 0.482, height: 0.200 } },
-        { name: 'אוסטרליה', continent: 'אוסטרליה', bounds: { x: 0.746, y: 0.560, width: 0.225, height: 0.298 } },
-        { name: 'קנדה', continent: 'צפון אמריקה', bounds: { x: 0.011, y: 0.026, width: 0.360, height: 0.235 } },
-        { name: 'ארגנטינה', continent: 'דרום אמריקה', bounds: { x: 0.119, y: 0.650, width: 0.180, height: 0.300 } },
-        { name: 'יפן', continent: 'אסיה', bounds: { x: 0.855, y: 0.245, width: 0.065, height: 0.130 } },
-        { name: 'צרפת', continent: 'אירופה', bounds: { x: 0.455, y: 0.265, width: 0.060, height: 0.080 } },
-        { name: 'בריטניה', continent: 'אירופה', bounds: { x: 0.440, y: 0.225, width: 0.045, height: 0.080 } },
-        { name: 'גרמניה', continent: 'אירופה', bounds: { x: 0.495, y: 0.245, width: 0.045, height: 0.065 } },
-        { name: 'ספרד', continent: 'אירופה', bounds: { x: 0.425, y: 0.305, width: 0.060, height: 0.060 } },
-        { name: 'איטליה', continent: 'אירופה', bounds: { x: 0.498, y: 0.295, width: 0.040, height: 0.080 } },
-        { name: 'מקסיקו', continent: 'צפון אמריקה', bounds: { x: 0.054, y: 0.370, width: 0.185, height: 0.139 } },
-        { name: 'דרום אפריקה', continent: 'אפריקה', bounds: { x: 0.378, y: 0.699, width: 0.192, height: 0.150 } },
-        { name: 'ערב הסעודית', continent: 'אסיה', bounds: { x: 0.535, y: 0.365, width: 0.070, height: 0.090 } },
-        { name: 'טורקיה', continent: 'אסיה', bounds: { x: 0.530, y: 0.275, width: 0.065, height: 0.050 } },
-        { name: 'קולומביה', continent: 'דרום אמריקה', bounds: { x: 0.160, y: 0.400, width: 0.100, height: 0.120 } }
+        { name: 'ברזיל', continent: 'דרום אמריקה', svgId: 'country-brazil' },
+        { name: 'מצרים', continent: 'אפריקה', svgId: 'country-egypt' },
+        { name: 'הודו', continent: 'אסיה', svgId: 'country-india' },
+        { name: 'סין', continent: 'אסיה', svgId: 'country-china' },
+        { name: 'ארה"ב', continent: 'צפון אמריקה', svgId: 'country-usa' },
+        { name: 'רוסיה', continent: 'אסיה', svgId: 'country-russia' },
+        { name: 'אוסטרליה', continent: 'אוסטרליה', svgId: 'country-australia-country' },
+        { name: 'קנדה', continent: 'צפון אמריקה', svgId: 'country-canada' },
+        { name: 'ארגנטינה', continent: 'דרום אמריקה', svgId: 'country-argentina' },
+        { name: 'יפן', continent: 'אסיה', svgId: 'country-japan' },
+        { name: 'צרפת', continent: 'אירופה', svgId: 'country-france' },
+        { name: 'בריטניה', continent: 'אירופה', svgId: 'country-uk' },
+        { name: 'גרמניה', continent: 'אירופה', svgId: 'country-germany' },
+        { name: 'ספרד', continent: 'אירופה', svgId: 'country-spain' },
+        { name: 'איטליה', continent: 'אירופה', svgId: 'country-italy' },
+        { name: 'מקסיקו', continent: 'צפון אמריקה', svgId: 'country-mexico' },
+        { name: 'דרום אפריקה', continent: 'אפריקה', svgId: 'country-south-africa' },
+        { name: 'ערב הסעודית', continent: 'אסיה', svgId: 'country-saudi-arabia' },
+        { name: 'טורקיה', continent: 'אסיה', svgId: 'country-turkey' },
+        { name: 'קולומביה', continent: 'דרום אמריקה', svgId: 'country-colombia' }
     ],
     cities: [
-        // Original cities - verified positions
-        { name: 'ניו יורק', country: 'ארה"ב', position: { x: 0.249, y: 0.404 } },
-        { name: 'לונדון', country: 'בריטניה', position: { x: 0.468, y: 0.296 } },
-        { name: 'טוקיו', country: 'יפן', position: { x: 0.886, y: 0.302 } },
-        { name: 'פריז', country: 'צרפת', position: { x: 0.490, y: 0.309 } },
-        { name: 'סידני', country: 'אוסטרליה', position: { x: 0.918, y: 0.749 } },
-        { name: 'קהיר', country: 'מצרים', position: { x: 0.505, y: 0.352 } },
-        { name: 'מומביי', country: 'הודו', position: { x: 0.604, y: 0.488 } },
-        { name: 'ריו דה ז\'נרו', country: 'ברזיל', position: { x: 0.298, y: 0.643 } },
-        { name: 'מוסקבה', country: 'רוסיה', position: { x: 0.537, y: 0.223 } },
-        { name: 'בייג\'ינג', country: 'סין', position: { x: 0.839, y: 0.319 } },
-        // Additional cities
-        { name: 'ברלין', country: 'גרמניה', position: { x: 0.515, y: 0.270 } },
-        { name: 'רומא', country: 'איטליה', position: { x: 0.515, y: 0.330 } },
-        { name: 'מדריד', country: 'ספרד', position: { x: 0.455, y: 0.330 } },
-        { name: 'איסטנבול', country: 'טורקיה', position: { x: 0.560, y: 0.295 } },
-        { name: 'מקסיקו סיטי', country: 'מקסיקו', position: { x: 0.130, y: 0.440 } },
-        { name: 'בואנוס איירס', country: 'ארגנטינה', position: { x: 0.210, y: 0.780 } },
-        { name: 'קייפטאון', country: 'דרום אפריקה', position: { x: 0.440, y: 0.820 } },
-        { name: 'דובאי', country: 'ערב הסעודית', position: { x: 0.580, y: 0.410 } },
-        { name: 'סאו פאולו', country: 'ברזיל', position: { x: 0.275, y: 0.665 } },
-        { name: 'וושינגטון', country: 'ארה"ב', position: { x: 0.240, y: 0.380 } },
-        { name: 'בוגוטה', country: 'קולומביה', position: { x: 0.195, y: 0.470 } },
-        { name: 'ריאד', country: 'ערב הסעודית', position: { x: 0.565, y: 0.410 } }
+        { name: 'ניו יורק', country: 'ארה"ב', svgId: 'city-new-york' },
+        { name: 'לונדון', country: 'בריטניה', svgId: 'city-london' },
+        { name: 'טוקיו', country: 'יפן', svgId: 'city-tokyo' },
+        { name: 'פריז', country: 'צרפת', svgId: 'city-paris' },
+        { name: 'סידני', country: 'אוסטרליה', svgId: 'city-sydney' },
+        { name: 'קהיר', country: 'מצרים', svgId: 'city-cairo' },
+        { name: 'מומביי', country: 'הודו', svgId: 'city-mumbai' },
+        { name: 'ריו דה ז\'נרו', country: 'ברזיל', svgId: 'city-rio' },
+        { name: 'מוסקבה', country: 'רוסיה', svgId: 'city-moscow' },
+        { name: 'בייג\'ינג', country: 'סין', svgId: 'city-beijing' },
+        { name: 'ברלין', country: 'גרמניה', svgId: 'city-berlin' },
+        { name: 'רומא', country: 'איטליה', svgId: 'city-rome' },
+        { name: 'מדריד', country: 'ספרד', svgId: 'city-madrid' },
+        { name: 'איסטנבול', country: 'טורקיה', svgId: 'city-istanbul' },
+        { name: 'מקסיקו סיטי', country: 'מקסיקו', svgId: 'city-mexico-city' },
+        { name: 'בואנוס איירס', country: 'ארגנטינה', svgId: 'city-buenos-aires' },
+        { name: 'קייפטאון', country: 'דרום אפריקה', svgId: 'city-cape-town' },
+        { name: 'דובאי', country: 'ערב הסעודית', svgId: 'city-dubai' },
+        { name: 'סאו פאולו', country: 'ברזיל', svgId: 'city-sao-paulo' },
+        { name: 'וושינגטון', country: 'ארה"ב', svgId: 'city-washington' },
+        { name: 'בוגוטה', country: 'קולומביה', svgId: 'city-bogota' },
+        { name: 'ריאד', country: 'ערב הסעודית', svgId: 'city-riyadh' }
     ]
 };
 
@@ -1303,17 +1287,33 @@ function startQuizStage(type) {
     updateLivesDisplay();
     updateScoreDisplay();
 
-    // Load map image for quiz
-    const mapImg = document.getElementById('quizMapImage');
-    mapImg.src = 'world_map.png';
-    mapImg.onload = () => {
+    // Load SVG map for quiz
+    loadSvgMap(() => {
         showQuizQuestion(type);
-    };
-    mapImg.onerror = () => {
-        // Fallback to puzzle image if world_map.png not available
-        mapImg.src = puzzleImage ? puzzleImage.src : MAP_IMAGE_URL;
-        mapImg.onload = () => showQuizQuestion(type);
-    };
+    });
+}
+
+// SVG map loading
+let svgMapLoaded = false;
+let svgMapData = null;
+
+function loadSvgMap(callback) {
+    const container = document.getElementById('svgMapContainer');
+    if (svgMapLoaded && container.querySelector('svg')) {
+        callback();
+        return;
+    }
+
+    fetch('world_map.svg')
+        .then(r => r.text())
+        .then(svgText => {
+            container.innerHTML = svgText;
+            svgMapLoaded = true;
+            callback();
+        })
+        .catch(err => {
+            console.error('Failed to load SVG map:', err);
+        });
 }
 
 function showQuizQuestion(type) {
@@ -1372,192 +1372,66 @@ function generateOptions(correct, type) {
     return options;
 }
 
-function positionOverlayOnImage() {
-    // Position the overlay and city-marker container exactly on top of the rendered image
-    const mapImg = document.getElementById('quizMapImage');
-    const overlay = document.getElementById('highlightOverlay');
-    const cityMarker = document.getElementById('cityMarker');
-    const wrapper = document.getElementById('quizMapWrapper');
-
-    const imgRect = mapImg.getBoundingClientRect();
-    const wrapperRect = wrapper.getBoundingClientRect();
-
-    // Offset from wrapper to the actual rendered image
-    const offsetX = imgRect.left - wrapperRect.left;
-    const offsetY = imgRect.top - wrapperRect.top;
-
-    // Position overlay exactly on top of the image
-    overlay.style.left = offsetX + 'px';
-    overlay.style.top = offsetY + 'px';
-    overlay.style.width = imgRect.width + 'px';
-    overlay.style.height = imgRect.height + 'px';
-    // Reset right/bottom since we're using explicit width/height
-    overlay.style.right = 'auto';
-    overlay.style.bottom = 'auto';
-}
-
-// Mask ID mapping: converts GeoData item name to mask filename
-const maskIdMap = {
-    'צפון אמריקה': 'north-america',
-    'דרום אמריקה': 'south-america',
-    'אירופה': 'europe',
-    'אפריקה': 'africa',
-    'אסיה': 'asia',
-    'אוסטרליה': 'australia',
-    'אנטארקטיקה': 'antarctica',
-    'ברזיל': 'brazil',
-    'מצרים': 'egypt',
-    'הודו': 'india',
-    'סין': 'china',
-    'ארה"ב': 'usa',
-    'רוסיה': 'russia',
-    'קנדה': 'canada',
-    'ארגנטינה': 'argentina',
-    'יפן': 'japan',
-    'צרפת': 'france',
-    'בריטניה': 'uk',
-    'גרמניה': 'germany',
-    'ספרד': 'spain',
-    'איטליה': 'italy',
-    'מקסיקו': 'mexico',
-    'דרום אפריקה': 'south-africa',
-    'ערב הסעודית': 'saudi-arabia',
-    'טורקיה': 'turkey',
-    'קולומביה': 'colombia'
-};
-
-// Preload mask images cache
-const maskImageCache = {};
-
-function preloadMask(name) {
-    const id = maskIdMap[name];
-    if (!id || maskImageCache[id]) return;
-
-    // For Australia country, reuse continent mask
-    const maskFile = (name === 'אוסטרליה' && !maskIdMap[name + '-country'])
-        ? id : id;
-
-    const img = new Image();
-    img.src = `masks/${maskFile}.png`;
-    maskImageCache[id] = img;
-}
-
-function getMaskId(item) {
-    let id = maskIdMap[item.name];
-    // Australia as country uses the same mask as the continent
-    if (item.continent === 'אוסטרליה' && item.name === 'אוסטרליה') {
-        id = 'australia-country';
-    }
-    return id;
+function clearHighlights() {
+    const container = document.getElementById('svgMapContainer');
+    if (!container) return;
+    // Remove all highlight classes
+    container.querySelectorAll('.svg-highlight').forEach(el => {
+        el.classList.remove('svg-highlight');
+    });
+    // Remove city highlight elements
+    container.querySelectorAll('.svg-city-dot, .svg-city-ring').forEach(el => {
+        el.remove();
+    });
 }
 
 function highlightMapArea(item, type) {
-    const mapImg = document.getElementById('quizMapImage');
-    const overlay = document.getElementById('highlightOverlay');
-    const cityMarker = document.getElementById('cityMarker');
-
-    // Wait for image to be fully loaded
-    if (!mapImg.complete || mapImg.naturalWidth === 0) {
+    const container = document.getElementById('svgMapContainer');
+    const svg = container ? container.querySelector('svg') : null;
+    if (!svg) {
         setTimeout(() => highlightMapArea(item, type), 100);
         return;
     }
 
-    // First, position overlay exactly on the image
-    positionOverlayOnImage();
-
-    // Add animation keyframes if not exists
-    if (!document.getElementById('flashAnimation')) {
-        const style = document.createElement('style');
-        style.id = 'flashAnimation';
-        style.textContent = `
-            @keyframes pulseMarker {
-                0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 15px rgba(255, 0, 0, 0.8), 0 0 30px rgba(255, 0, 0, 0.4); }
-                50% { transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 25px rgba(255, 0, 0, 1), 0 0 50px rgba(255, 0, 0, 0.6); }
-            }
-            @keyframes landFlash {
-                0%, 100% { opacity: 0.3; }
-                50% { opacity: 0.75; }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
-    overlay.innerHTML = '';
-    cityMarker.style.display = 'none';
+    clearHighlights();
 
     if (type === 'cities') {
-        // Show city marker as a pulsing dot
-        const marker = document.createElement('div');
-        marker.style.cssText = `
-            position: absolute;
-            left: ${item.position.x * 100}%;
-            top: ${item.position.y * 100}%;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #ff6b6b 0%, #ff0000 70%);
-            border: 3px solid #ffffff;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.8), 0 0 30px rgba(255, 0, 0, 0.4);
-            transform: translate(-50%, -50%);
-            animation: pulseMarker 1s ease-in-out infinite;
-            pointer-events: none;
-            z-index: 10;
-        `;
-        overlay.appendChild(marker);
+        // Find the city circle element and add a pulsing dot + ring
+        const cityEl = svg.getElementById(item.svgId);
+        if (cityEl) {
+            const cx = parseFloat(cityEl.getAttribute('cx'));
+            const cy = parseFloat(cityEl.getAttribute('cy'));
 
-        // Add a ring around the marker for better visibility
-        const ring = document.createElement('div');
-        ring.style.cssText = `
-            position: absolute;
-            left: ${item.position.x * 100}%;
-            top: ${item.position.y * 100}%;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.6);
-            transform: translate(-50%, -50%);
-            animation: pulseMarker 1s ease-in-out infinite;
-            pointer-events: none;
-            z-index: 9;
-        `;
-        overlay.appendChild(ring);
-    } else {
-        // Load pre-rendered mask image for pixel-perfect highlighting
-        let maskId = getMaskId(item);
-        if (!maskId) maskId = maskIdMap[item.name];
+            // Create pulsing dot
+            const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            dot.setAttribute('cx', cx);
+            dot.setAttribute('cy', cy);
+            dot.setAttribute('r', '5');
+            dot.classList.add('svg-city-dot');
+            svg.appendChild(dot);
 
-        const maskImg = document.createElement('img');
-        maskImg.src = `masks/${maskId}.png`;
-        maskImg.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            animation: landFlash 1s ease-in-out infinite;
-        `;
-
-        maskImg.onerror = () => {
-            // Fallback: simple rectangle if mask not found
-            console.warn('Mask not found:', maskId);
-            const div = document.createElement('div');
-            div.style.cssText = `
-                position: absolute;
-                left: ${item.bounds.x * 100}%;
-                top: ${item.bounds.y * 100}%;
-                width: ${item.bounds.width * 100}%;
-                height: ${item.bounds.height * 100}%;
-                background: rgba(255, 0, 0, 0.3);
-                border: 3px solid #ff0000;
-                border-radius: 10px;
-                animation: landFlash 1s ease-in-out infinite;
-                pointer-events: none;
-            `;
-            overlay.appendChild(div);
-        };
-
-        overlay.appendChild(maskImg);
+            // Create pulsing ring
+            const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            ring.setAttribute('cx', cx);
+            ring.setAttribute('cy', cy);
+            ring.setAttribute('r', '12');
+            ring.classList.add('svg-city-ring');
+            svg.appendChild(ring);
+        }
+    } else if (type === 'continents') {
+        // Highlight all paths in the continent group
+        const group = svg.getElementById(item.svgId);
+        if (group) {
+            group.querySelectorAll('.country-path').forEach(path => {
+                path.classList.add('svg-highlight');
+            });
+        }
+    } else if (type === 'countries') {
+        // Highlight the specific country path
+        const el = svg.getElementById(item.svgId);
+        if (el) {
+            el.classList.add('svg-highlight');
+        }
     }
 }
 
@@ -1596,8 +1470,7 @@ function checkAnswer(selected, correct, type) {
     // Next question
     setTimeout(() => {
         currentQuizIndex++;
-        document.getElementById('highlightOverlay').innerHTML = '';
-        document.getElementById('cityMarker').style.display = 'none';
+        clearHighlights();
         showQuizQuestion(type);
     }, 1500);
 }
