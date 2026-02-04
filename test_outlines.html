@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Geography Game - Position Verification</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #1a1a2e; font-family: Arial, sans-serif; color: #fff; padding: 20px; }
+        h1 { text-align: center; color: #4ecdc4; margin-bottom: 15px; }
+        .controls { text-align: center; margin-bottom: 15px; }
+        .controls label { margin: 0 10px; cursor: pointer; }
+        .controls input[type="checkbox"] { margin-left: 5px; }
+        .container { position: relative; max-width: 1408px; margin: 0 auto; }
+        img { width: 100%; display: block; }
+        svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        polygon { cursor: pointer; transition: fill-opacity 0.2s; }
+        polygon:hover { fill-opacity: 0.5 !important; stroke-width: 3 !important; }
+        .tooltip {
+            position: fixed; background: rgba(0,0,0,0.9); color: #4ecdc4;
+            padding: 8px 12px; border-radius: 5px; font-size: 14px; pointer-events: none;
+            display: none; z-index: 100; direction: rtl;
+        }
+    </style>
+</head>
+<body>
+    <h1>Geography Game - Position Verification</h1>
+    <div class="controls">
+        <label><input type="checkbox" id="showContinents" checked> Continents</label>
+        <label><input type="checkbox" id="showCountries" checked> Countries</label>
+        <label><input type="checkbox" id="showCities" checked> Cities</label>
+    </div>
+    <div class="container">
+        <img src="world_map.png" alt="World Map">
+        <svg id="overlay" viewBox="0 0 1 1" preserveAspectRatio="none"></svg>
+    </div>
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+    // Load GeoData from game.js
+    fetch('game.js').then(r => r.text()).then(text => {
+        const match = text.match(/const GeoData = ({[\s\S]*?});/);
+        if (!match) { alert('Could not find GeoData'); return; }
+        const GeoData = eval('(' + match[1] + ')');
+
+        const svg = document.getElementById('overlay');
+        const tooltip = document.getElementById('tooltip');
+        const svgNS = 'http://www.w3.org/2000/svg';
+
+        function render() {
+            svg.innerHTML = '';
+            const showC = document.getElementById('showContinents').checked;
+            const showCo = document.getElementById('showCountries').checked;
+            const showCi = document.getElementById('showCities').checked;
+
+            // Continents
+            if (showC) {
+                const colors = ['#ff6b6b','#ffd93d','#6bcb77','#ff8c42','#4d96ff','#9b59b6','#ecf0f1'];
+                GeoData.continents.forEach((c, i) => {
+                    if (c.outline) {
+                        const poly = document.createElementNS(svgNS, 'polygon');
+                        poly.setAttribute('points', c.outline.map(([x,y]) => `${x},${y}`).join(' '));
+                        poly.setAttribute('fill', colors[i % colors.length]);
+                        poly.setAttribute('fill-opacity', '0.25');
+                        poly.setAttribute('stroke', colors[i % colors.length]);
+                        poly.setAttribute('stroke-width', '0.002');
+                        poly.dataset.name = c.name;
+                        poly.dataset.nameEn = c.nameEn;
+                        svg.appendChild(poly);
+                    }
+                });
+            }
+
+            // Countries
+            if (showCo) {
+                GeoData.countries.forEach(c => {
+                    if (c.outline) {
+                        const poly = document.createElementNS(svgNS, 'polygon');
+                        poly.setAttribute('points', c.outline.map(([x,y]) => `${x},${y}`).join(' '));
+                        poly.setAttribute('fill', '#ff4444');
+                        poly.setAttribute('fill-opacity', '0.15');
+                        poly.setAttribute('stroke', '#ff4444');
+                        poly.setAttribute('stroke-width', '0.0015');
+                        poly.dataset.name = c.name;
+                        poly.dataset.continent = c.continent;
+                        svg.appendChild(poly);
+
+                        // Country label
+                        const cx = c.outline.reduce((s, [x]) => s + x, 0) / c.outline.length;
+                        const cy = c.outline.reduce((s, [,y]) => s + y, 0) / c.outline.length;
+                        const text = document.createElementNS(svgNS, 'text');
+                        text.setAttribute('x', cx);
+                        text.setAttribute('y', cy);
+                        text.setAttribute('fill', '#fff');
+                        text.setAttribute('font-size', '0.012');
+                        text.setAttribute('text-anchor', 'middle');
+                        text.setAttribute('dominant-baseline', 'middle');
+                        text.setAttribute('font-family', 'Arial');
+                        text.setAttribute('pointer-events', 'none');
+                        text.textContent = c.name;
+                        svg.appendChild(text);
+                    }
+                });
+            }
+
+            // Cities
+            if (showCi) {
+                GeoData.cities.forEach(c => {
+                    const g = document.createElementNS(svgNS, 'g');
+
+                    // Outer glow
+                    const glow = document.createElementNS(svgNS, 'circle');
+                    glow.setAttribute('cx', c.position.x);
+                    glow.setAttribute('cy', c.position.y);
+                    glow.setAttribute('r', '0.008');
+                    glow.setAttribute('fill', 'rgba(255,200,0,0.3)');
+                    g.appendChild(glow);
+
+                    // Dot
+                    const dot = document.createElementNS(svgNS, 'circle');
+                    dot.setAttribute('cx', c.position.x);
+                    dot.setAttribute('cy', c.position.y);
+                    dot.setAttribute('r', '0.004');
+                    dot.setAttribute('fill', '#ffd93d');
+                    dot.setAttribute('stroke', '#fff');
+                    dot.setAttribute('stroke-width', '0.001');
+                    g.appendChild(dot);
+
+                    // Label
+                    const text = document.createElementNS(svgNS, 'text');
+                    text.setAttribute('x', c.position.x + 0.010);
+                    text.setAttribute('y', c.position.y + 0.003);
+                    text.setAttribute('fill', '#ffd93d');
+                    text.setAttribute('font-size', '0.010');
+                    text.setAttribute('font-family', 'Arial');
+                    text.setAttribute('pointer-events', 'none');
+                    text.textContent = c.name;
+                    g.appendChild(text);
+
+                    g.dataset.name = c.name;
+                    g.dataset.country = c.country;
+                    svg.appendChild(g);
+                });
+            }
+        }
+
+        // Tooltip
+        svg.addEventListener('mouseover', (e) => {
+            const el = e.target.closest('[data-name]');
+            if (el) {
+                tooltip.textContent = el.dataset.name + (el.dataset.nameEn ? ` (${el.dataset.nameEn})` : '') + (el.dataset.continent ? ` - ${el.dataset.continent}` : '') + (el.dataset.country ? ` - ${el.dataset.country}` : '');
+                tooltip.style.display = 'block';
+            }
+        });
+        svg.addEventListener('mouseout', () => { tooltip.style.display = 'none'; });
+        svg.addEventListener('mousemove', (e) => {
+            tooltip.style.left = e.clientX + 15 + 'px';
+            tooltip.style.top = e.clientY + 15 + 'px';
+        });
+
+        document.querySelectorAll('.controls input').forEach(cb => cb.addEventListener('change', render));
+        render();
+    });
+    </script>
+</body>
+</html>
