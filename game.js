@@ -173,18 +173,18 @@ const GeoData = {
         { name: 'רוסיה', continent: 'אסיה', bounds: { x: 0.497, y: 0.039, width: 0.482, height: 0.200 } },
         { name: 'אוסטרליה', continent: 'אוסטרליה', bounds: { x: 0.746, y: 0.560, width: 0.225, height: 0.298 } },
         { name: 'קנדה', continent: 'צפון אמריקה', bounds: { x: 0.011, y: 0.026, width: 0.360, height: 0.235 } },
-        { name: 'ארגנטינה', continent: 'דרום אמריקה', bounds: { x: 0.140, y: 0.700, width: 0.100, height: 0.240 } },
+        { name: 'ארגנטינה', continent: 'דרום אמריקה', bounds: { x: 0.119, y: 0.650, width: 0.180, height: 0.300 } },
         { name: 'יפן', continent: 'אסיה', bounds: { x: 0.855, y: 0.245, width: 0.065, height: 0.130 } },
         { name: 'צרפת', continent: 'אירופה', bounds: { x: 0.455, y: 0.265, width: 0.060, height: 0.080 } },
         { name: 'בריטניה', continent: 'אירופה', bounds: { x: 0.440, y: 0.225, width: 0.045, height: 0.080 } },
         { name: 'גרמניה', continent: 'אירופה', bounds: { x: 0.495, y: 0.245, width: 0.045, height: 0.065 } },
         { name: 'ספרד', continent: 'אירופה', bounds: { x: 0.425, y: 0.305, width: 0.060, height: 0.060 } },
         { name: 'איטליה', continent: 'אירופה', bounds: { x: 0.498, y: 0.295, width: 0.040, height: 0.080 } },
-        { name: 'מקסיקו', continent: 'צפון אמריקה', bounds: { x: 0.065, y: 0.395, width: 0.130, height: 0.090 } },
-        { name: 'דרום אפריקה', continent: 'אפריקה', bounds: { x: 0.395, y: 0.765, width: 0.090, height: 0.070 } },
+        { name: 'מקסיקו', continent: 'צפון אמריקה', bounds: { x: 0.054, y: 0.370, width: 0.185, height: 0.139 } },
+        { name: 'דרום אפריקה', continent: 'אפריקה', bounds: { x: 0.378, y: 0.699, width: 0.192, height: 0.150 } },
         { name: 'ערב הסעודית', continent: 'אסיה', bounds: { x: 0.535, y: 0.365, width: 0.070, height: 0.090 } },
         { name: 'טורקיה', continent: 'אסיה', bounds: { x: 0.530, y: 0.275, width: 0.065, height: 0.050 } },
-        { name: 'קולומביה', continent: 'דרום אמריקה', bounds: { x: 0.160, y: 0.435, width: 0.070, height: 0.070 } }
+        { name: 'קולומביה', continent: 'דרום אמריקה', bounds: { x: 0.160, y: 0.400, width: 0.100, height: 0.120 } }
     ],
     cities: [
         // Original cities - verified positions
@@ -1303,9 +1303,8 @@ function startQuizStage(type) {
     updateLivesDisplay();
     updateScoreDisplay();
 
-    // Load map image for quiz - always use the actual PNG for pixel-accurate highlighting
+    // Load map image for quiz
     const mapImg = document.getElementById('quizMapImage');
-    _mapPixelCache = null; // reset pixel cache for fresh image
     mapImg.src = 'world_map.png';
     mapImg.onload = () => {
         showQuizQuestion(type);
@@ -1397,32 +1396,59 @@ function positionOverlayOnImage() {
     overlay.style.bottom = 'auto';
 }
 
-// Pixel-based land detection (same logic as server-side analyze_map.js)
-function isLandPixel(r, g, b) {
-    const isGreen = g > 80 && g > b && g > r * 0.7 && b < 150;
-    const isTan = r > 150 && g > 120 && b < 120;
-    const isIce = r > 200 && g > 200 && b > 200;
-    const isDarkGreen = g > 60 && r < 120 && b < 100;
-    return isGreen || isTan || isIce || isDarkGreen;
+// Mask ID mapping: converts GeoData item name to mask filename
+const maskIdMap = {
+    'צפון אמריקה': 'north-america',
+    'דרום אמריקה': 'south-america',
+    'אירופה': 'europe',
+    'אפריקה': 'africa',
+    'אסיה': 'asia',
+    'אוסטרליה': 'australia',
+    'אנטארקטיקה': 'antarctica',
+    'ברזיל': 'brazil',
+    'מצרים': 'egypt',
+    'הודו': 'india',
+    'סין': 'china',
+    'ארה"ב': 'usa',
+    'רוסיה': 'russia',
+    'קנדה': 'canada',
+    'ארגנטינה': 'argentina',
+    'יפן': 'japan',
+    'צרפת': 'france',
+    'בריטניה': 'uk',
+    'גרמניה': 'germany',
+    'ספרד': 'spain',
+    'איטליה': 'italy',
+    'מקסיקו': 'mexico',
+    'דרום אפריקה': 'south-africa',
+    'ערב הסעודית': 'saudi-arabia',
+    'טורקיה': 'turkey',
+    'קולומביה': 'colombia'
+};
+
+// Preload mask images cache
+const maskImageCache = {};
+
+function preloadMask(name) {
+    const id = maskIdMap[name];
+    if (!id || maskImageCache[id]) return;
+
+    // For Australia country, reuse continent mask
+    const maskFile = (name === 'אוסטרליה' && !maskIdMap[name + '-country'])
+        ? id : id;
+
+    const img = new Image();
+    img.src = `masks/${maskFile}.png`;
+    maskImageCache[id] = img;
 }
 
-// Cache for the map pixel data (read once, reuse for all questions)
-let _mapPixelCache = null;
-
-function getMapPixelData(mapImg) {
-    if (_mapPixelCache) return _mapPixelCache;
-
-    const offscreen = document.createElement('canvas');
-    offscreen.width = mapImg.naturalWidth;
-    offscreen.height = mapImg.naturalHeight;
-    const ctx = offscreen.getContext('2d');
-    ctx.drawImage(mapImg, 0, 0);
-    _mapPixelCache = {
-        imageData: ctx.getImageData(0, 0, offscreen.width, offscreen.height),
-        width: offscreen.width,
-        height: offscreen.height
-    };
-    return _mapPixelCache;
+function getMaskId(item) {
+    let id = maskIdMap[item.name];
+    // Australia as country uses the same mask as the continent
+    if (item.continent === 'אוסטרליה' && item.name === 'אוסטרליה') {
+        id = 'australia-country';
+    }
+    return id;
 }
 
 function highlightMapArea(item, type) {
@@ -1449,8 +1475,8 @@ function highlightMapArea(item, type) {
                 50% { transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 25px rgba(255, 0, 0, 1), 0 0 50px rgba(255, 0, 0, 0.6); }
             }
             @keyframes landFlash {
-                0%, 100% { opacity: 0.25; }
-                50% { opacity: 0.65; }
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 0.75; }
             }
         `;
         document.head.appendChild(style);
@@ -1496,65 +1522,27 @@ function highlightMapArea(item, type) {
         `;
         overlay.appendChild(ring);
     } else {
-        // Pixel-based highlighting: read actual map pixels and color only land
-        try {
-            const pixelData = getMapPixelData(mapImg);
-            const W = pixelData.width;
-            const H = pixelData.height;
-            const srcData = pixelData.imageData.data;
+        // Load pre-rendered mask image for pixel-perfect highlighting
+        let maskId = getMaskId(item);
+        if (!maskId) maskId = maskIdMap[item.name];
 
-            // Bounds in pixel coordinates
-            const bx = Math.floor(item.bounds.x * W);
-            const by = Math.floor(item.bounds.y * H);
-            const bw = Math.ceil(item.bounds.width * W);
-            const bh = Math.ceil(item.bounds.height * H);
+        const maskImg = document.createElement('img');
+        maskImg.src = `masks/${maskId}.png`;
+        maskImg.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            animation: landFlash 1s ease-in-out infinite;
+        `;
 
-            // Create a canvas for the highlight
-            const canvas = document.createElement('canvas');
-            canvas.width = W;
-            canvas.height = H;
-            const ctx = canvas.getContext('2d');
-
-            // Create highlight image data - only color land pixels within bounds
-            const highlightImageData = ctx.createImageData(bw, bh);
-            const hd = highlightImageData.data;
-
-            for (let y = 0; y < bh; y++) {
-                for (let x = 0; x < bw; x++) {
-                    const srcIdx = ((by + y) * W + (bx + x)) * 4;
-                    const r = srcData[srcIdx];
-                    const g = srcData[srcIdx + 1];
-                    const b = srcData[srcIdx + 2];
-
-                    if (isLandPixel(r, g, b)) {
-                        const dstIdx = (y * bw + x) * 4;
-                        hd[dstIdx] = 255;      // R
-                        hd[dstIdx + 1] = 60;   // G
-                        hd[dstIdx + 2] = 60;   // B
-                        hd[dstIdx + 3] = 180;  // A
-                    }
-                }
-            }
-
-            ctx.putImageData(highlightImageData, bx, by);
-
-            // Style the canvas to sit on top of the map
-            canvas.style.cssText = `
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                pointer-events: none;
-                animation: landFlash 1s ease-in-out infinite;
-            `;
-
-            overlay.appendChild(canvas);
-        } catch (e) {
-            // Fallback if canvas pixel reading fails (e.g., CORS)
-            console.warn('Pixel highlighting failed, using fallback:', e);
-            const highlightDiv = document.createElement('div');
-            highlightDiv.style.cssText = `
+        maskImg.onerror = () => {
+            // Fallback: simple rectangle if mask not found
+            console.warn('Mask not found:', maskId);
+            const div = document.createElement('div');
+            div.style.cssText = `
                 position: absolute;
                 left: ${item.bounds.x * 100}%;
                 top: ${item.bounds.y * 100}%;
@@ -1566,8 +1554,10 @@ function highlightMapArea(item, type) {
                 animation: landFlash 1s ease-in-out infinite;
                 pointer-events: none;
             `;
-            overlay.appendChild(highlightDiv);
-        }
+            overlay.appendChild(div);
+        };
+
+        overlay.appendChild(maskImg);
     }
 }
 
