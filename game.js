@@ -1293,7 +1293,7 @@ function loadSvgMap(callback) {
         return;
     }
 
-    fetch('world_map.svg')
+    fetch('world_map.svg?v=2')
         .then(r => r.text())
         .then(svgText => {
             container.innerHTML = svgText;
