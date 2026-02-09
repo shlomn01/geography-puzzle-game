@@ -1300,9 +1300,8 @@ function startQuizStage(type) {
     // Load SVG map for quiz
     loadSvgMap(() => {
         const svg = mapContainer.querySelector('svg');
-        if (type === 'countries' && svg) {
-            addCountryLabels(svg);
-        } else if (svg) {
+        // Never show country labels during quiz - they spoil the answer
+        if (svg) {
             removeCountryLabels(svg);
         }
         showQuizQuestion(type);

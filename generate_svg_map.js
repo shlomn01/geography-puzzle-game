@@ -1,4 +1,4 @@
-const topology = require('world-atlas/countries-110m.json');
+const topology = require('world-atlas/countries-50m.json');
 const topojson = require('topojson-client');
 const fs = require('fs');
 

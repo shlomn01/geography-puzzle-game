@@ -649,6 +649,7 @@ html, body {
     height: auto;
     max-height: 100%;
     display: block;
+    shape-rendering: geometricPrecision;
 }
 
 /* SVG highlight animations */
@@ -693,37 +694,6 @@ html, body {
 
 .stage-countries {
     position: relative;
-    overflow: hidden;
-}
-
-/* Animated ocean wave effect */
-.stage-countries::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -50%;
-    width: 200%;
-    height: 100%;
-    background: repeating-linear-gradient(
-        90deg,
-        transparent,
-        transparent 60px,
-        rgba(255,255,255,0.03) 60px,
-        rgba(255,255,255,0.03) 62px
-    );
-    animation: oceanWaves 8s linear infinite;
-    pointer-events: none;
-    z-index: 0;
-}
-
-.stage-countries svg {
-    position: relative;
-    z-index: 1;
-}
-
-@keyframes oceanWaves {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(60px); }
 }
 
 /* Clean flat color palette per continent */
@@ -761,16 +731,6 @@ html, body {
     fill: #ff6b6b !important;
     stroke: #ff0000 !important;
     stroke-width: 2.5 !important;
-    filter: drop-shadow(0 0 6px rgba(255, 0, 0, 0.6));
-}
-
-/* Country name labels */
-.country-label {
-    fill: #1a1a2e;
-    font-family: 'Heebo', sans-serif;
-    font-weight: 600;
-    pointer-events: none;
-    opacity: 0.7;
 }
 
 .quiz-question-area {
