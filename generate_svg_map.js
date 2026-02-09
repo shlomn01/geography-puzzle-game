@@ -31,10 +31,9 @@ const countryCodeMap = {
 };
 
 // Continent membership by country code (ISO numeric)
-// Deduplicated: each code in only one continent. Quiz countries forced to match GeoData.
 const continentMap = {
     'north-america': ['124','840','484','044','052','084','188','192','212','214','222','308','320','332','340','388','474','558','591','630','659','662','670','304','060','028','533','136','531','534','535','652','654','663','666'],
-    'south-america': ['032','068','076','152','170','218','238','254','328','600','604','740','858','862'],
+    'south-america': ['032','069','076','152','170','218','238','254','328','600','604','740','858','862'],
     'europe': ['008','020','040','056','070','100','112','191','196','203','208','233','246','250','276','300','348','352','372','380','428','440','442','492','498','499','528','578','616','620','642','674','688','703','705','724','752','756','804','826','831','832','833'],
     'africa': ['012','024','072','086','108','120','132','140','148','174','175','178','180','204','226','231','232','262','266','270','288','324','384','404','426','430','434','450','454','466','478','480','504','508','516','562','566','624','638','646','678','686','694','706','710','716','728','729','732','748','768','788','800','818','854','894'],
     'asia': ['004','031','048','050','051','064','096','104','116','144','156','158','162','166','275','344','356','360','364','368','376','392','398','400','408','410','414','417','418','422','446','458','462','496','512','524','586','608','634','643','682','702','760','762','764','784','792','795','860','887'],
@@ -47,17 +46,70 @@ const SVG_HEIGHT = 700;
 const PADDING = 30;
 
 function projectLon(lon) {
-    // Map -180..180 to PADDING..(SVG_WIDTH-PADDING)
     return PADDING + ((lon + 180) / 360) * (SVG_WIDTH - 2 * PADDING);
 }
 
 function projectLat(lat) {
-    // Map 90..-90 to PADDING..(SVG_HEIGHT-PADDING)  (flip Y)
     return PADDING + ((90 - lat) / 180) * (SVG_HEIGHT - 2 * PADDING);
 }
 
+// Detect if a ring crosses the antimeridian (longitude jump > 180)
+function ringCrossesAntimeridian(coords) {
+    for (let i = 0; i < coords.length - 1; i++) {
+        if (Math.abs(coords[i + 1][0] - coords[i][0]) > 180) return true;
+    }
+    return false;
+}
+
+// Split a ring that crosses the antimeridian into two separate rings (left and right halves)
+function splitRingAtAntimeridian(coords) {
+    const leftRing = [];  // points with lon < 0 (western hemisphere at the edge)
+    const rightRing = []; // points with lon > 0 (eastern hemisphere at the edge)
+
+    for (let i = 0; i < coords.length; i++) {
+        const pt = coords[i];
+        const nextPt = coords[(i + 1) % coords.length];
+
+        // Check if this segment crosses the antimeridian
+        if (Math.abs(nextPt[0] - pt[0]) > 180) {
+            // Interpolate the crossing point
+            const lon1 = pt[0], lat1 = pt[1];
+            const lon2 = nextPt[0], lat2 = nextPt[1];
+
+            // Calculate latitude at the antimeridian crossing
+            let adjustedLon2 = lon2;
+            if (lon2 - lon1 > 180) adjustedLon2 -= 360;
+            if (lon1 - lon2 > 180) adjustedLon2 += 360;
+            const t = (180 - lon1) / (adjustedLon2 - lon1);
+            const crossLat = lat1 + t * (lat2 - lat1);
+
+            if (pt[0] > 0) {
+                // Going from east to west (positive to negative)
+                rightRing.push(pt);
+                rightRing.push([180, crossLat]);
+                leftRing.push([-180, crossLat]);
+            } else {
+                // Going from west to east (negative to positive)
+                leftRing.push(pt);
+                leftRing.push([-180, crossLat]);
+                rightRing.push([180, crossLat]);
+            }
+        } else {
+            if (pt[0] > 0 || (pt[0] === 0 && rightRing.length > 0)) {
+                rightRing.push(pt);
+            } else {
+                leftRing.push(pt);
+            }
+        }
+    }
+
+    const rings = [];
+    if (rightRing.length >= 3) rings.push(rightRing);
+    if (leftRing.length >= 3) rings.push(leftRing);
+    return rings;
+}
+
 function coordsToPath(coords) {
-    // coords is an array of [lon, lat] pairs
     if (coords.length === 0) return '';
     let d = '';
     coords.forEach((pt, i) => {
@@ -69,61 +121,90 @@ function coordsToPath(coords) {
     return d;
 }
 
+function ringToPath(ring) {
+    if (ringCrossesAntimeridian(ring)) {
+        const splitRings = splitRingAtAntimeridian(ring);
+        return splitRings.map(r => coordsToPath(r)).join('');
+    }
+    return coordsToPath(ring);
+}
+
 function geometryToPath(geometry) {
     let d = '';
     if (geometry.type === 'Polygon') {
         geometry.coordinates.forEach(ring => {
-            d += coordsToPath(ring);
+            d += ringToPath(ring);
         });
     } else if (geometry.type === 'MultiPolygon') {
         geometry.coordinates.forEach(polygon => {
             polygon.forEach(ring => {
-                d += coordsToPath(ring);
+                d += ringToPath(ring);
             });
         });
     }
     return d;
 }
 
-// Build continent paths by merging countries
 function getCountriesInContinent(continentName) {
     const codes = continentMap[continentName] || [];
     return countries.features.filter(f => codes.includes(f.id));
 }
 
+// Modern vibrant color palette
+const continentColors = {
+    'north-america': { fill: '#4ECDC4', stroke: '#2AB5AC', grad1: '#5AD8CF', grad2: '#3CBDB5' },
+    'south-america': { fill: '#45B7D1', stroke: '#2E9AB3', grad1: '#52C4DE', grad2: '#38AAC4' },
+    'europe':        { fill: '#96CEB4', stroke: '#7AB89A', grad1: '#A8DAC4', grad2: '#84C2A4' },
+    'africa':        { fill: '#FFEAA7', stroke: '#E0CC8A', grad1: '#FFF0BE', grad2: '#F5DE8C' },
+    'asia':          { fill: '#DDA0DD', stroke: '#C085C0', grad1: '#E8B5E8', grad2: '#D28BD2' },
+    'australia':     { fill: '#FF8A65', stroke: '#E07050', grad1: '#FF9E7D', grad2: '#F07550' },
+    'antarctica':    { fill: '#E8EDF2', stroke: '#C8D0D8', grad1: '#F0F4F8', grad2: '#D8E0E8' }
+};
+
 // Generate SVG
 let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SVG_WIDTH} ${SVG_HEIGHT}" preserveAspectRatio="xMidYMid meet" id="worldMapSVG">
   <defs>
-    <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a5276"/>
-      <stop offset="50%" style="stop-color:#2980b9"/>
-      <stop offset="100%" style="stop-color:#1a5276"/>
+    <!-- Ocean gradient -->
+    <radialGradient id="oceanGrad" cx="50%" cy="40%" r="70%" fx="50%" fy="35%">
+      <stop offset="0%" style="stop-color:#1E88E5; stop-opacity:1"/>
+      <stop offset="40%" style="stop-color:#1565C0; stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0D47A1; stop-opacity:1"/>
+    </radialGradient>
+
+
+    <!-- Continent gradients -->
+`;
+
+// Add gradient definitions for each continent
+Object.entries(continentColors).forEach(([name, colors]) => {
+    svg += `    <linearGradient id="grad-${name}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:${colors.grad1}"/>
+      <stop offset="100%" style="stop-color:${colors.grad2}"/>
     </linearGradient>
-    <linearGradient id="landGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#52be80"/>
-      <stop offset="100%" style="stop-color:#27ae60"/>
-    </linearGradient>
+`;
+});
+
+svg += `
+    <!-- Glow filter for highlights -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
     <style>
-      .country-path { fill: #27ae60; stroke: #1e8449; stroke-width: 0.5; cursor: pointer; transition: fill 0.3s; }
-      .country-path:hover { fill: #2ecc71; }
-      .continent-group { pointer-events: none; }
-      .highlight-flash { animation: svgFlash 1s ease-in-out infinite; }
-      @keyframes svgFlash {
-        0%, 100% { fill: #ff4444; opacity: 0.5; }
-        50% { fill: #ff0000; opacity: 0.9; }
-      }
+      .country-path { stroke-linejoin: round; cursor: pointer; transition: fill 0.3s; }
+      .country-path:hover { filter: brightness(1.15); }
     </style>
   </defs>
 
   <!-- Ocean background -->
   <rect width="${SVG_WIDTH}" height="${SVG_HEIGHT}" fill="url(#oceanGrad)"/>
 
-  <!-- Decorative frame -->
-  <rect x="5" y="5" width="${SVG_WIDTH - 10}" height="${SVG_HEIGHT - 10}" fill="none" stroke="#8B4513" stroke-width="8" rx="5"/>
-  <rect x="15" y="15" width="${SVG_WIDTH - 30}" height="${SVG_HEIGHT - 30}" fill="none" stroke="#D4A574" stroke-width="2" rx="3"/>
-
-  <!-- Grid lines (subtle) -->
-  <g opacity="0.08" stroke="#fff" stroke-width="0.5">
+  <!-- Subtle grid lines -->
+  <g opacity="0.07" stroke="#ffffff" stroke-width="0.3">
 `;
 
 // Add subtle grid lines
@@ -137,32 +218,13 @@ for (let lat = -60; lat <= 90; lat += 30) {
 }
 svg += `  </g>\n\n`;
 
-// Draw ALL land as a base layer (neutral color)
-svg += `  <!-- Base land layer -->\n`;
-svg += `  <g id="base-land" opacity="0.3">\n`;
-land.features.forEach(feature => {
-    const d = geometryToPath(feature.geometry);
-    if (d) {
-        svg += `    <path d="${d}" fill="#888" stroke="none"/>\n`;
-    }
-});
-svg += `  </g>\n\n`;
-
 // Draw continents as groups
 const continentNames = ['north-america', 'south-america', 'europe', 'africa', 'asia', 'australia'];
-const continentColors = {
-    'north-america': '#3498db',
-    'south-america': '#27ae60',
-    'europe': '#9b59b6',
-    'africa': '#f39c12',
-    'asia': '#e74c3c',
-    'australia': '#1abc9c'
-};
 
 svg += `  <!-- Continent groups -->\n`;
 continentNames.forEach(contName => {
     const contCountries = getCountriesInContinent(contName);
-    const color = continentColors[contName];
+    const colors = continentColors[contName];
 
     svg += `  <g id="continent-${contName}" class="continent-group" data-continent="${contName}">\n`;
 
@@ -172,34 +234,30 @@ continentNames.forEach(contName => {
 
         const countryId = countryCodeMap[feature.id];
         if (countryId) {
-            // This is one of our quiz countries - give it its own ID
-            svg += `    <path id="country-${countryId}" class="country-path" d="${d}" fill="${color}" stroke="#fff" stroke-width="0.8" data-country="${countryId}"/>\n`;
+            svg += `    <path id="country-${countryId}" class="country-path" d="${d}" fill="url(#grad-${contName})" stroke="${colors.stroke}" stroke-width="0.8" data-country="${countryId}"/>\n`;
         } else {
-            // Generic country in this continent
-            svg += `    <path class="country-path" d="${d}" fill="${color}" stroke="#fff" stroke-width="0.3"/>\n`;
+            svg += `    <path class="country-path" d="${d}" fill="url(#grad-${contName})" stroke="${colors.stroke}" stroke-width="0.3"/>\n`;
         }
     });
 
     svg += `  </g>\n\n`;
 });
 
-// Add Antarctica manually (it's often missing from 110m data)
+// Antarctica
 svg += `  <!-- Antarctica -->\n`;
 svg += `  <g id="continent-antarctica" class="continent-group" data-continent="antarctica">\n`;
-// Check if Antarctica exists in the data
 const antarcticaFeature = countries.features.find(f => f.id === '010');
 if (antarcticaFeature) {
     const d = geometryToPath(antarcticaFeature.geometry);
-    svg += `    <path class="country-path" d="${d}" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="0.5"/>\n`;
+    svg += `    <path class="country-path" d="${d}" fill="url(#grad-antarctica)" stroke="${continentColors.antarctica.stroke}" stroke-width="0.5"/>\n`;
 } else {
-    // Draw a simplified Antarctica
     const y = projectLat(-80).toFixed(1);
     const y2 = projectLat(-90).toFixed(1);
-    svg += `    <rect x="${PADDING}" y="${y}" width="${SVG_WIDTH - 2 * PADDING}" height="${y2 - y}" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="0.5" rx="5"/>\n`;
+    svg += `    <rect x="${PADDING}" y="${y}" width="${SVG_WIDTH - 2 * PADDING}" height="${y2 - y}" fill="url(#grad-antarctica)" stroke="${continentColors.antarctica.stroke}" stroke-width="0.5" rx="5"/>\n`;
 }
 svg += `  </g>\n\n`;
 
-// Add city markers
+// City markers (invisible until highlighted by game)
 const cities = [
     { id: 'new-york', lon: -74.0, lat: 40.7 },
     { id: 'london', lon: -0.1, lat: 51.5 },
@@ -234,29 +292,13 @@ cities.forEach(city => {
 });
 svg += `  </g>\n\n`;
 
-// Decorative elements
-svg += `  <!-- Compass Rose -->
-  <g transform="translate(${SVG_WIDTH - 60}, ${SVG_HEIGHT - 60})">
-    <circle cx="0" cy="0" r="25" fill="#D4A574" stroke="#8B4513" stroke-width="2" opacity="0.8"/>
-    <polygon points="0,-22 3,-8 0,-12 -3,-8" fill="#8B4513"/>
-    <polygon points="0,22 3,8 0,12 -3,8" fill="#D4A574" stroke="#8B4513"/>
-    <polygon points="-22,0 -8,3 -12,0 -8,-3" fill="#D4A574" stroke="#8B4513"/>
-    <polygon points="22,0 8,3 12,0 8,-3" fill="#D4A574" stroke="#8B4513"/>
-    <text x="-3" y="-26" fill="#8B4513" font-size="8" font-weight="bold">N</text>
-    <text x="-3" y="33" fill="#8B4513" font-size="8" font-weight="bold">S</text>
-  </g>
-
-  <!-- Title -->
-  <text x="${SVG_WIDTH / 2}" y="${SVG_HEIGHT - 15}" fill="#D4A574" font-size="11" font-family="serif" text-anchor="middle" opacity="0.6">World Map</text>
-`;
-
 svg += `</svg>`;
 
 // Write SVG file
 fs.writeFileSync('world_map.svg', svg);
 console.log('Generated world_map.svg');
 
-// Also compute city positions as normalized coordinates (0-1) relative to SVG viewBox
+// City positions (normalized 0-1)
 console.log('\n// City positions (normalized 0-1):');
 cities.forEach(city => {
     const x = (projectLon(city.lon) / SVG_WIDTH).toFixed(4);
@@ -264,7 +306,7 @@ cities.forEach(city => {
     console.log(`  '${city.id}': { x: ${x}, y: ${y} },`);
 });
 
-// List which country codes were found
+// Country ID mapping verification
 console.log('\n// Country ID mapping results:');
 let found = 0, missing = 0;
 for (const [code, name] of Object.entries(countryCodeMap)) {
