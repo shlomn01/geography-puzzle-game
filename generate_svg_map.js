@@ -150,61 +150,30 @@ function getCountriesInContinent(continentName) {
     return countries.features.filter(f => codes.includes(f.id));
 }
 
-// Modern vibrant color palette
+// Clean flat color palette - vibrant and distinct
 const continentColors = {
-    'north-america': { fill: '#4ECDC4', stroke: '#2AB5AC', grad1: '#5AD8CF', grad2: '#3CBDB5' },
-    'south-america': { fill: '#45B7D1', stroke: '#2E9AB3', grad1: '#52C4DE', grad2: '#38AAC4' },
-    'europe':        { fill: '#96CEB4', stroke: '#7AB89A', grad1: '#A8DAC4', grad2: '#84C2A4' },
-    'africa':        { fill: '#FFEAA7', stroke: '#E0CC8A', grad1: '#FFF0BE', grad2: '#F5DE8C' },
-    'asia':          { fill: '#DDA0DD', stroke: '#C085C0', grad1: '#E8B5E8', grad2: '#D28BD2' },
-    'australia':     { fill: '#FF8A65', stroke: '#E07050', grad1: '#FF9E7D', grad2: '#F07550' },
-    'antarctica':    { fill: '#E8EDF2', stroke: '#C8D0D8', grad1: '#F0F4F8', grad2: '#D8E0E8' }
+    'north-america': { fill: '#4ECDC4', stroke: '#3BA89F' },
+    'south-america': { fill: '#45B7D1', stroke: '#3499B0' },
+    'europe':        { fill: '#96CEB4', stroke: '#7BB89A' },
+    'africa':        { fill: '#FFEAA7', stroke: '#DCC97E' },
+    'asia':          { fill: '#DDA0DD', stroke: '#BE85BE' },
+    'australia':     { fill: '#FF8A65', stroke: '#DD6E4A' },
+    'antarctica':    { fill: '#E0E8F0', stroke: '#C0CCD8' }
 };
 
-// Generate SVG
+// Generate SVG - clean flat colors, no gradients
 let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SVG_WIDTH} ${SVG_HEIGHT}" preserveAspectRatio="xMidYMid meet" id="worldMapSVG">
   <defs>
-    <!-- Ocean gradient -->
-    <radialGradient id="oceanGrad" cx="50%" cy="40%" r="70%" fx="50%" fy="35%">
-      <stop offset="0%" style="stop-color:#1E88E5; stop-opacity:1"/>
-      <stop offset="40%" style="stop-color:#1565C0; stop-opacity:1"/>
-      <stop offset="100%" style="stop-color:#0D47A1; stop-opacity:1"/>
-    </radialGradient>
-
-
-    <!-- Continent gradients -->
-`;
-
-// Add gradient definitions for each continent
-Object.entries(continentColors).forEach(([name, colors]) => {
-    svg += `    <linearGradient id="grad-${name}" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:${colors.grad1}"/>
-      <stop offset="100%" style="stop-color:${colors.grad2}"/>
-    </linearGradient>
-`;
-});
-
-svg += `
-    <!-- Glow filter for highlights -->
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-      <feMerge>
-        <feMergeNode in="coloredBlur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-
     <style>
-      .country-path { stroke-linejoin: round; cursor: pointer; transition: fill 0.3s; }
-      .country-path:hover { filter: brightness(1.15); }
+      .country-path { stroke-linejoin: round; cursor: pointer; }
     </style>
   </defs>
 
   <!-- Ocean background -->
-  <rect width="${SVG_WIDTH}" height="${SVG_HEIGHT}" fill="url(#oceanGrad)"/>
+  <rect width="${SVG_WIDTH}" height="${SVG_HEIGHT}" fill="#1565C0"/>
 
   <!-- Subtle grid lines -->
-  <g opacity="0.07" stroke="#ffffff" stroke-width="0.3">
+  <g opacity="0.08" stroke="#ffffff" stroke-width="0.3">
 `;
 
 // Add subtle grid lines
@@ -234,9 +203,9 @@ continentNames.forEach(contName => {
 
         const countryId = countryCodeMap[feature.id];
         if (countryId) {
-            svg += `    <path id="country-${countryId}" class="country-path" d="${d}" fill="url(#grad-${contName})" stroke="${colors.stroke}" stroke-width="0.8" data-country="${countryId}"/>\n`;
+            svg += `    <path id="country-${countryId}" class="country-path" d="${d}" fill="${colors.fill}" stroke="${colors.stroke}" stroke-width="0.8" data-country="${countryId}"/>\n`;
         } else {
-            svg += `    <path class="country-path" d="${d}" fill="url(#grad-${contName})" stroke="${colors.stroke}" stroke-width="0.3"/>\n`;
+            svg += `    <path class="country-path" d="${d}" fill="${colors.fill}" stroke="${colors.stroke}" stroke-width="0.3"/>\n`;
         }
     });
 
@@ -249,11 +218,11 @@ svg += `  <g id="continent-antarctica" class="continent-group" data-continent="a
 const antarcticaFeature = countries.features.find(f => f.id === '010');
 if (antarcticaFeature) {
     const d = geometryToPath(antarcticaFeature.geometry);
-    svg += `    <path class="country-path" d="${d}" fill="url(#grad-antarctica)" stroke="${continentColors.antarctica.stroke}" stroke-width="0.5"/>\n`;
+    svg += `    <path class="country-path" d="${d}" fill="${continentColors.antarctica.fill}" stroke="${continentColors.antarctica.stroke}" stroke-width="0.5"/>\n`;
 } else {
     const y = projectLat(-80).toFixed(1);
     const y2 = projectLat(-90).toFixed(1);
-    svg += `    <rect x="${PADDING}" y="${y}" width="${SVG_WIDTH - 2 * PADDING}" height="${y2 - y}" fill="url(#grad-antarctica)" stroke="${continentColors.antarctica.stroke}" stroke-width="0.5" rx="5"/>\n`;
+    svg += `    <rect x="${PADDING}" y="${y}" width="${SVG_WIDTH - 2 * PADDING}" height="${y2 - y}" fill="${continentColors.antarctica.fill}" stroke="${continentColors.antarctica.stroke}" stroke-width="0.5" rx="5"/>\n`;
 }
 svg += `  </g>\n\n`;
 

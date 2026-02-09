@@ -726,34 +726,34 @@ html, body {
     100% { transform: translateX(60px); }
 }
 
-/* Vibrant modern color palette per continent */
+/* Clean flat color palette per continent */
 .stage-countries [data-continent="north-america"] .country-path {
     fill: #4ECDC4 !important;
-    stroke: #2AB5AC !important;
+    stroke: #3BA89F !important;
 }
 .stage-countries [data-continent="south-america"] .country-path {
     fill: #45B7D1 !important;
-    stroke: #2E9AB3 !important;
+    stroke: #3499B0 !important;
 }
 .stage-countries [data-continent="europe"] .country-path {
     fill: #96CEB4 !important;
-    stroke: #7AB89A !important;
+    stroke: #7BB89A !important;
 }
 .stage-countries [data-continent="africa"] .country-path {
     fill: #FFEAA7 !important;
-    stroke: #E0CC8A !important;
+    stroke: #DCC97E !important;
 }
 .stage-countries [data-continent="asia"] .country-path {
     fill: #DDA0DD !important;
-    stroke: #C085C0 !important;
+    stroke: #BE85BE !important;
 }
 .stage-countries [data-continent="australia"] .country-path {
     fill: #FF8A65 !important;
-    stroke: #E07050 !important;
+    stroke: #DD6E4A !important;
 }
 .stage-countries [data-continent="antarctica"] .country-path {
-    fill: #E8EDF2 !important;
-    stroke: #C8D0D8 !important;
+    fill: #E0E8F0 !important;
+    stroke: #C0CCD8 !important;
 }
 
 /* Enhanced highlight for countries stage */
