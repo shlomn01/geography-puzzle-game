@@ -1308,24 +1308,6 @@ function startQuizStage(type) {
     });
 }
 
-function addCountryLabels(svg) {
-    removeCountryLabels(svg);
-    GeoData.countries.forEach(country => {
-        const el = svg.getElementById(country.svgId);
-        if (!el) return;
-        const bbox = el.getBBox();
-        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        label.setAttribute('x', bbox.x + bbox.width / 2);
-        label.setAttribute('y', bbox.y + bbox.height / 2);
-        label.setAttribute('text-anchor', 'middle');
-        label.setAttribute('dominant-baseline', 'central');
-        label.setAttribute('class', 'country-label');
-        label.setAttribute('font-size', Math.max(5, Math.min(11, bbox.width / 6)));
-        label.textContent = country.name;
-        svg.appendChild(label);
-    });
-}
-
 function removeCountryLabels(svg) {
     if (!svg) return;
     svg.querySelectorAll('.country-label').forEach(el => el.remove());

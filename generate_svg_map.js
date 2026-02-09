@@ -172,20 +172,7 @@ let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SVG_WIDTH} ${S
   <!-- Ocean background -->
   <rect width="${SVG_WIDTH}" height="${SVG_HEIGHT}" fill="#1565C0"/>
 
-  <!-- Subtle grid lines -->
-  <g opacity="0.08" stroke="#ffffff" stroke-width="0.3">
 `;
-
-// Add subtle grid lines
-for (let lon = -150; lon <= 180; lon += 30) {
-    const x = projectLon(lon).toFixed(1);
-    svg += `    <line x1="${x}" y1="${PADDING}" x2="${x}" y2="${SVG_HEIGHT - PADDING}"/>\n`;
-}
-for (let lat = -60; lat <= 90; lat += 30) {
-    const y = projectLat(lat).toFixed(1);
-    svg += `    <line x1="${PADDING}" y1="${y}" x2="${SVG_WIDTH - PADDING}" y2="${y}"/>\n`;
-}
-svg += `  </g>\n\n`;
 
 // Draw continents as groups
 const continentNames = ['north-america', 'south-america', 'europe', 'africa', 'asia', 'australia'];
