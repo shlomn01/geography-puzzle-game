@@ -430,9 +430,11 @@ function selectDifficulty(pieces) {
     GameState.correctAnswers = 0;
     GameState.totalQuestions = 0;
     GameState.hintsUsed = 0;
+    GameState.gameStartTime = performance.now();
 
     showLoading();
     startPuzzleStage();
+    if (typeof gtag === 'function') gtag('event', 'game_start', { game_name: window.GAME_NAME || 'geography-puzzle-game', difficulty: pieces });
 }
 
 function backToMenu() {
@@ -1125,6 +1127,7 @@ function showHint() {
 function completePuzzleStage() {
     sounds.complete();
     addScore(100); // Bonus for completing puzzle
+    if (typeof gtag === 'function') gtag('event', 'stage_complete', { game_name: window.GAME_NAME || 'geography-puzzle-game', stage: 'puzzle', score: GameState.score });
 
     // Brief celebration
     setTimeout(() => {
@@ -1485,6 +1488,7 @@ function updateLivesDisplay() {
 function completeQuizStage(type) {
     sounds.complete();
     addScore(50); // Stage completion bonus
+    if (typeof gtag === 'function') gtag('event', 'stage_complete', { game_name: window.GAME_NAME || 'geography-puzzle-game', stage: type, score: GameState.score });
 
     setTimeout(() => {
         if (type === 'continents') {
@@ -1508,6 +1512,18 @@ function showResults() {
     stopBackgroundMusic();
     const mc = document.getElementById('svgMapContainer');
     if (mc) mc.classList.remove('stage-countries');
+
+    if (typeof gtag === 'function') {
+        const timePlayed = Math.round((performance.now() - (GameState.gameStartTime || performance.now())) / 1000);
+        gtag('event', 'game_end', {
+            game_name: window.GAME_NAME || 'geography-puzzle-game',
+            result: GameState.lives > 0 ? 'won' : 'lost',
+            score: GameState.score,
+            correct_answers: GameState.correctAnswers,
+            stage_reached: GameState.currentStage,
+            time_played_seconds: timePlayed
+        });
+    }
 
     showScreen('resultsScreen');
 
